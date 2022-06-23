@@ -370,52 +370,29 @@ def insert_db(vm_name,vm_id,state,dt):
     conn.close()
     print("Done.")
 
+# Container name
+CONTAINERNAME = "binaryfiles"
+ 
+# Fetching the images from azure blob
 def blob_fetch():
-    return "xsjddwidhwwjhwoskwqjdhdhe"
-    """
-    plat_blob_name="platbinaryblob"
-    STORAGEACCOUNTURL = "https://sailvmimages1112.blob.core.windows.net"
-    STORAGEACCOUNTKEY = "ErDnlB2mILTBYnnYuBnw2bUeNKkW2JgYTeWCk4VR1VK+zmGtDKWhuv6AwdBQ4Fz25ndCSJtdG3Uu+AStxho3bw=="
-    CONTAINERNAME = "images"
-    BLOBNAME = "testfile.txt"
+    container = ContainerClient.from_connection_string(conn_str="DefaultEndpointsProtocol=https;AccountName=test3storage;AccountKey=ulkTo6nj49BOTf+8vFafDMSrWowuTBvzkgH+Umf+e1HngiTD8DblBQ7gE2vMXPIOblC735M4lEfF+AStRa3PcA==;EndpointSuffix=core.windows.net", container_name = CONTAINERNAME)
+    blob_list = container.list_blobs()
+    sorted_blob_list = sorted(blob_list,key=lambda x: x.creation_time, reverse=True)
+    print(sorted_blob_list[0].name)
+    blob_download(sorted_blob_list[0].name)
+        
 
-    q=[]
-
-    blob_service_client_instance = BlobServiceClient(
-        account_url=STORAGEACCOUNTURL, credential=STORAGEACCOUNTKEY)
-
-    blob_client_instance = blob_service_client_instance.get_blob_client(
-        CONTAINERNAME, BLOBNAME, snapshot=None)
-    cst=ContainerClient( account_url= STORAGEACCOUNTURL, container_name= CONTAINERNAME,credential=STORAGEACCOUNTKEY)
-    #container_client = blob_service_client_instance(CONTAINERNAME)
-
-    blob_list = cst.list_blobs()
-    blob_array=[]
-    plat_blob_list=[]
-    for blob in blob_list:
-        if blob.name==plat_blob_name
-            plat_blob_list.append(blob)
-    q=[]
-    for blob in plat_blob_list:
-        q.append(str(blob.last_modified))
-    blob_download(max(q))
-
-    
-
+# Downloading the blob file from azure conatainer
 def blob_download(file_name):
-
-    local_file_name=file_name
-    blob_service_client = BlobServiceClient.from_connection_string("DefaultEndpointsProtocol=https;AccountName=pkteststg1;AccountKey=vWGQatTKtuGEa+Tvv1RKAAMvIwC5oGVp6cTpaDijRsf0rXGRhReuUHtDFcqbaP063tF5j4wB+wNY+ASt/wWTOw==;EndpointSuffix=core.windows.net")
-    local_path = r"D:\\coDE\\tset"
-
-
-    download_file_path = local_path
-    blob_client = blob_service_client.get_container_client(container= "pktestcont") 
+    
+    blob_service_client = BlobServiceClient.from_connection_string("DefaultEndpointsProtocol=https;AccountName=test3storage;AccountKey=ulkTo6nj49BOTf+8vFafDMSrWowuTBvzkgH+Umf+e1HngiTD8DblBQ7gE2vMXPIOblC735M4lEfF+AStRa3PcA==;EndpointSuffix=core.windows.net")
+    local_path = r"C:\Downloads\Documents"
+    download_file_path = os.path.join(local_path, str.replace(file_name ,'.rar', 'DOWNLOAD.rar'))
+    blob_client = blob_service_client.get_container_client(container= CONTAINERNAME) 
     print("\nDownloading blob to \n\t" + download_file_path)
 
     with open(download_file_path, "wb") as download_file:
-    download_file.write(blob_client.download_blob(local_file_name).readall())
-    """
+        download_file.write(blob_client.download_blob(file_name).readall())
 
 if __name__ == "__main__":
 
