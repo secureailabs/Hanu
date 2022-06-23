@@ -1,4 +1,4 @@
 {
     "vm_id":"/subscriptions/acb03e79-44af-44fc-99a8-7feade883e5d/resourceGroups/Test-Env/providers/Microsoft.Compute/virtualMachines/SAIL-Test-VM-01",
-    "vm_status":"Started"
+    "vm_status":"running"
 }
