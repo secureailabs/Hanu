@@ -1,0 +1,27 @@
+{
+    "TransactionIdentifier":"56491337-faa0-4b3c-9534-984784e93f43",
+    "RequestorResponseTarget":"C:/Users/SibayanBag/Desktop/SCN/Test",
+    "InternalUtcEpochTime":1650401435,
+    "OriginalIdentifier":"b1da6e37-3d4a-49b6-b97d-59b31494e30a",
+    "RequestHmac":"5308b6b4cb77caa8e1eb9b12dcf719eef460c172a6f7efd379b520d3888318fe",
+    "vm_name":"scntestvm01",
+    "rg_name":"scntestrg01",
+    "nsg_name":"scntestnsg01",
+    "vnet_name":"scntestvnet01",
+    "Request":{
+        "UtcEpochTime":1650401427,
+        "VirtualMachineType":"Standard_B1s",
+        "Region":"EastUS"
+    },
+    "InitializationParameters":{
+        "ResearchOrganizationIdentifier":"c9e8b975-2793-4e2e-b15f-b03f2ae05192",
+        "DataOwnerOrganizationIdentifier":"a05b9c78-e52f-4e6e-834d-d54bbcceb87d",
+        "DigitalContractTdentifier":"c69a4c91-1190-4cb0-bcca-41ed6e797bde",
+        "DatasetIdentifier":"78b372e8-87b3-4a06-8496-7eaa16441da9",
+        "ResearchOrganizationRsaAuditPublicKey":"MIGeMA0GCSqGSIb3DQEBAQUAA4GMADCBiAKBgGt89P6KFyoKTWE5M3/NAywk2S8X",
+        "DataOwnerOrganizationRsaAuditPublicKey":"LkzHDqTkN4L4mH2sO3nddX9zwUaZKkNSjNMS6nR/tTuqC2aDEzOz0zicJ1g/WXVD",
+        "AuditorOrganizationRsaAuditPublicKey":"gJh0eiagDZZkSZHlR6sjgT6MoF0EVuNQRke2lBVMQUUG3OxowcESUmUruPoC4XmN",
+        "SailOrganizationRsaAuditPublicKey":"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDmAjnYbSUdYbeLx+8fmVQS2C3b",
+        "EncryptedAesDataExchangeKey":"+KbPdSgV"
+    }
+}
