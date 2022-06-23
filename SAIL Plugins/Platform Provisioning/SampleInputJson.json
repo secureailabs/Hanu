@@ -1,0 +1,36 @@
+{
+    "TransactionIdentifier":"56491337-faa0-4b3c-9534-984784e93f43",
+
+    "RequestorResponseTarget":"C:/Users/SibayanBag/Desktop/SCN/Test",
+
+    "InternalUtcEpochTime":1650401435,
+
+    "OriginalIdentifier":"b1da6e37-3d4a-49b6-b97d-59b31494e30a",
+
+    "RequestHmac":"5308b6b4cb77caa8e1eb9b12dcf719eef460c172a6f7efd379b520d3888318fe",
+
+    "vm_name":"plattestvm01",
+
+    "rg_name":"plattestrg01",
+
+    "nsg_name":"plattestnsg01",
+
+    "vnet_name":"plattestvnet01",
+
+    "Request":{
+
+        "UtcEpochTime":1650401427,
+
+        "VirtualMachineType":"Standard_B1s",
+
+        "Region":"EastUS"
+
+    },
+
+    "PathBlobStorage":"https://test3storage.blob.core.windows.net/binaryfiles",
+
+    "TLSPublicRootKey":"78b372e8-87b3-4a06-8496-7eaa16441da9",
+
+    "DatasetsPublicRootKey":"gJh0eiagDZZkSZHlR6sjgT6MoF0EVuNQRke2lBVMQUUG3OxowcESUmUruPoC4XmN"
+
+}
