@@ -56,36 +56,26 @@ if [ -z "${AZURE_CLIENT_SECRET}" ]; then
 fi
 
 # Build and Package the Platform Services
-make package_platformservices
-make package_dataservices
-
-# Build and Package the Frontend Services
-make package_webfrontend
+make package_apiservices -j
+make databaseInitializationTool -j
+make package_newwebfrontend -j
 
 # Create a temporary directory to store the files
 mkdir -p $tempDeployDir
 
-# Build the DemoDatabaseTools and UploadPackageAndInitializationVector
-pushd InternalTools/UploadPackageAndInitializationVector
-make all -j
-popd
-
-pushd InternalTools/DemoDatabaseTools
-make all -j
-popd
-
 # Copy the files to the temporary directory
-cp Binary/DemoDatabaseTools $tempDeployDir
-cp Binary/UploadPackageAndInitializationVector $tempDeployDir
+cp Binary/DatabaseInitializationTool $tempDeployDir
+cp Binary/igr_001.csvp $tempDeployDir
+cp Binary/igr_002.csvp $tempDeployDir
+cp Binary/mgr_001.csvp $tempDeployDir
+cp Binary/DatabaseInitializationSettings.json $tempDeployDir
 cp -r AzureDeploymentTemplates/ArmTemplates $tempDeployDir
-mv Binary/webfrontend.tar.gz $tempDeployDir
-mv Binary/PlatformServices.tar.gz $tempDeployDir/platformservices.tar.gz
-mv Binary/DataServices.tar.gz $tempDeployDir/dataservices.tar.gz
+mv Binary/newwebfrontend.tar.gz $tempDeployDir
+cp Binary/apiservices.tar.gz $tempDeployDir/apiservices.tar.gz
 cp -r InternalTools/DeployPlatform/* $tempDeployDir
 
 # TODO: Prawal. This is a temporary fix. Ideally the initializationVector should be generated at runtime
-cp Docker/dataservices/InitializationVector.json $tempDeployDir/dataservices.json
-cp Docker/platformservices/InitializationVector.json $tempDeployDir/platformservices.json
+cp Docker/apiservices/InitializationVector.json $tempDeployDir/apiservices.json
 
 # Check for the docker image and create it if it does not exist
 docker images | grep -x "azuredeploymenttools"

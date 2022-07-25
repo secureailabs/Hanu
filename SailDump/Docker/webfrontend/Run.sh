@@ -20,12 +20,17 @@ else
     exit 1
 fi
 
-# Move the InitializerVector to the Binary folder
-mv InitializationVector.json WebFrontend/
+# Create a folder to hold all the Binaries
+mkdir -p "$imageName"_dir
+
+# Copy the binaries to the folder
+cp vm_initializer.py "$imageName"_dir/
 
 # Run the docker container
 docker run \
 -dit \
--p 3000:3000 \
--v $(pwd)/WebFrontend:/app \
+-p 443:443 \
+-p 9090:9091 \
+-v $(pwd)/"$imageName"_dir:/app \
+-v $(pwd)/certs:/etc/nginx/certs \
 $imageName
