@@ -24,7 +24,7 @@ tenant_id="3e74e5ef-7e6a-4cf0-8573-680ca49b64d8"
 my_observer = Observer()
 
 #Path to monitor for json files please change this path to your monitoring path
-path = "C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\Monitoring Plugin\Monitor"
+path = "C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\SCN Monitoring\Monitor"
 
 patterns = ["*.json"]
 
@@ -47,20 +47,28 @@ config = {
   'ssl_ca': 'C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\DigiCertAssuredIDRootCA.crt.pem'
 }
 
+def cursor_intialize():
 # Construct connection string and intialize database pointer
 
-try:
-   conn = mysql.connector.connect(**config)
-   print("Connection established")
-except mysql.connector.Error as err:
-  if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-    print("Something is wrong with the user name or password")
-  elif err.errno == errorcode.ER_BAD_DB_ERROR:
-    print("Database does not exist")
-  else:
-    print(err)
-else:
-  cursor = conn.cursor()
+    try:
+        conn = mysql.connector.connect(**config)
+        print("Connection established")
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("Something is wrong with the user name or password")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("Database does not exist")
+        else:
+            print(err)
+    else:
+        cursor = conn.cursor()
+    return (cursor,conn)
+
+def cursor_close(cursor,conn):
+    # Cleanup intialized database pointer
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 #Dependent function for monitoring 
 
@@ -96,9 +104,10 @@ def on_created(event):
     with open(event.src_path) as jsondata:
         data=json.load(jsondata)
 
-    vm_id=data["vm_id"]
+    vm_guid=data["vm_guid"]
     vm_status=data["vm_status"]
-    fetch_vm_status_for_API(vm_id,vm_status)
+    vm_id=fetch_vm_resid(vm_guid)
+    fetch_vm_status_for_API(vm_id,vm_status,vm_guid)
 
 #Authentication token for azure this token will be used by rest API's to read and write to azure
 
@@ -122,11 +131,44 @@ def auth():
     except:
         print("Token can't be generated")
 
+def fetch_vm_resid(guid):
+    cursor,conn=cursor_intialize()
+    try:
+        # query to fetch all rows related to a single VM based on its resourceID
+        query="select * from scn_provisioning_plugin where guid= %s"
+        cursor.execute(query,(guid,))
+        rows = cursor.fetchall()
+        print("Read",cursor.rowcount,"row(s) of data.")
+        row=rows[-1]
+    except:
+        cursor_close(cursor,conn)
+        return
+    res_id=row[3]
+    print(res_id)
+    cursor_close(cursor,conn)
+    return res_id
+
+def fetch_guid(ID):
+    cursor,conn=cursor_intialize()
+    try:
+        # query to fetch all rows related to a single VM based on its resourceID
+        query="select * from scn_provisioning_plugin where resource_id= %s"
+        cursor.execute(query,(ID,))
+        rows = cursor.fetchall()
+        print("Read",cursor.rowcount,"row(s) of data.")
+        row=rows[-1]
+    except:
+        cursor_close(cursor,conn)
+        return
+    vm_guid=row[2]
+    cursor_close(cursor,conn)
+    return vm_guid 
+
 
 # Function to fetch all VM's in that subscription
 def list_of_all_VM(token):
     #Fetch all VM's in that subscription change subscription id in the query
-    url = "https://management.azure.com/subscriptions/acb03e79-44af-44fc-99a8-7feade883e5d/providers/Microsoft.Compute/virtualMachines?api-version=2022-03-01"
+    url = "https://management.azure.com/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/providers/Microsoft.Compute/virtualMachines?api-version=2022-03-01"
     payload = {}
     headers = {
         'Authorization': 'Bearer ' + token,
@@ -156,7 +198,7 @@ def fetch_vm_status_for_azure(ID,token):
 
 #Comparing data b/w azure and API call from DEVCC
 
-def fetch_vm_status_for_API(ID,status):
+def fetch_vm_status_for_API(ID,status,guid):
     token=auth()
     try:
         url = "https://management.azure.com"+ID+"/InstanceView?api-version=2022-03-01"
@@ -172,42 +214,69 @@ def fetch_vm_status_for_API(ID,status):
         now_status=now_status.split('/')
         now_status=now_status[-1]
     except:
-        print("There is NO such VM")
-    print(now_status)
+        vm_name=ID.split('/')
+        vm_name=vm_name[-1]
+        print("There is NO such VM "+vm_name)
+        return
+    print("The existing status of the server is "+ now_status)
     if status != now_status:
         print("API Data Mismatch")
-        insert_new_status_into_db(ID,now_status)
+        print("Database Status Not Matched")
+        print("The current VM status as reported by CLI Tool is "+ status)
+        cursor,conn=cursor_intialize()
+        insert_new_status_into_db(ID,status,cursor,guid)
+        print("Added the new VM status to "+status+" from the previous status "+now_status+ " in the database")
+        cursor_close(cursor,conn)
         title=("The API reported the correct Mismatch!!\n Updated the Database record")
         #alert_mail(title)
+    else:
+        print("Database Matched")
+           
+
 
 # Comparing data with azure and database last entry
 def compare_azure_with_db(vm_id,new_vm_status):
+    cursor,conn=cursor_intialize()
     try:
         # query to fetch all rows related to a single VM based on its resourceID
-        query="select * from scn_provisioning_plugin where resourceid= %s"
+        query="select * from scn_provisioning_plugin where resource_id= %s"
         cursor.execute(query,(vm_id,))
         rows = cursor.fetchall()
         print("Read",cursor.rowcount,"row(s) of data.")
         row=rows[-1]
     except:
-        print("There is no such VM registered in the database")
+        vm_name=vm_id.split('/')
+        vm_name=vm_name[-1]
+        print("There is no VM "+vm_name+" registered in the database")
+        cursor_close(cursor,conn)
         return
-    print(row[4])
+
+    print("The previous status of the server is "+ row[4])
+
     past_vm_status=row[4]
     if new_vm_status!=past_vm_status:
-        print("Database Not Matched")
-        insert_new_status_into_db(vm_id,new_vm_status)
+        print("Database Status Not Matched")
+        print("The current VM status is "+ new_vm_status)
+        vm_guid=fetch_guid(vm_id)
+        insert_new_status_into_db(vm_id,new_vm_status,cursor,vm_guid)
+        print("Added the new VM status to "+new_vm_status+" from the previous status "+past_vm_status+ " in the database")
         title=("There is match in the Database with Azure!!\n Updated the Database record")
         #alert_mail(title)
+    else:
+        print("Database Matched")
+    cursor_close(cursor,conn)
 
 # Inserting new status in database
-def insert_new_status_into_db(ID,new_status):
+def insert_new_status_into_db(ID,new_status,cursor,guid):
+    
     name_vm=ID.split('/')
     name_vm=name_vm[-1]
     time_now=datetime.now()
 
-    cursor.execute("INSERT INTO scn_provisioning_plugin (vm_name , resource_id , resoure_state , time) VALUES (%s, %s, %s, %s);", (name_vm, ID, new_status, time_now))
+    cursor.execute("INSERT INTO scn_provisioning_plugin (vm_name , guid, resource_id , resource_state , time) VALUES (%s, %s, %s, %s, %s);", (name_vm, guid, ID, new_status, time_now))
     print("Inserted",cursor.rowcount,"row(s) of data.")
+
+
 
 
 # Generate Email to a specific action, needs local desktop outlook access
@@ -232,6 +301,7 @@ def alert_mail(title):
 
 # Monitoring every 30 sec b/w azure and database
 def start_monitoring():
+    print("\n\n                                 Monitoring Cycle Begins                    \n\n")
     token=auth()
     list_of_all_VM(token)
 
