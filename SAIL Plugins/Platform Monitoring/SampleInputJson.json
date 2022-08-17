@@ -1,4 +1,4 @@
 {
-    "vm_id":"/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/resourceGroups/plattestrg01-sail-eus-prod-1234567812345678123456787654321/providers/Microsoft.Compute/virtualMachines/plattestvm01-sail-eus-prod1234567812345678123456787654321",
+    "vm_guid":"d25e9401-fed2-4270-a5bd-f8cf9049c153",
     "vm_status":"stopped"
 }
