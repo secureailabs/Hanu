@@ -8,9 +8,12 @@ from watchdog.events import PatternMatchingEventHandler
 
 from azure.identity import AzureCliCredential
 from azure.mgmt.resource import ResourceManagementClient
+from azure.mgmt.network.models import VirtualNetworkPeering
+from azure.mgmt.network.models import SubResource
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network.v2020_06_01.models import NetworkSecurityGroup
+from azure.mgmt.network.models import Subnet
 import os
 import requests
 
@@ -35,6 +38,8 @@ my_observer = Observer()
 #Path to monitor for json files please change this path to your monitoring path
 
 path = "C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\SCN Provisioning\Monitor"
+#"/home/sailadmin/sail_plugin/SCNProvisioning/Monitor" 
+
 
 patterns = ["*.json"]
 
@@ -121,24 +126,23 @@ def on_created(event):
         IPSAIL="10.10.10.10"
         ECB=blob_fetch()
         token=auth()
-        guid="12345678123456781234567812345678"
-        
+        guid=fetch_guid()
         vm_name=data['vm_name']
         rg_name=data['rg_name']
         nsg_name=data['nsg_name']
         vnet_name=data['vnet_name']
         vm_size=data['Request']['VirtualMachineType']
-        loc=data['Request']['Region']
-        now = datetime.now()
-        now=str(now)  
-        insert_db(vm_name,guid,'Provisioning',now)
+        loc=data['Request']['Region'] 
+        insert_db(vm_name,guid,guid,"Provisioning")
         status=res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid)
         vm_status=fetch_vm_status_from_azure(status[0],token)
-        now = datetime.now()
-        now=str(now)
+        vm_name=status[0].split('/')
+        vm_name=vm_name[-1]
         if status[1]!="OK":
-            insert_db(vm_name,guid,"Not Provisioned error",now)  
-        insert_db(vm_name,status[0],vm_status,now)
+            now = datetime.now()
+            now=str(now)
+            insert_db(vm_name,guid,guid,"Not Provisioned")
+        insert_db(vm_name,guid,status[0],vm_status)
         json_write(status[0],ROI,DOOI,DCI,DI,TKAC,EAESK,ECB,RORP,DOORP,AORP,SORP,EADEK,IPSAIL)
 
     except: 
@@ -146,6 +150,65 @@ def on_created(event):
     #print(vm_name)
 
     #print(f"hey, {event.src_path} ")
+
+# Adding Public IP To Firewall Policy
+def add_fw_rule(pip,guid,destination_vnet):
+    GROUP_NAME = "rg-sail-wus-hub-001"
+    subscription_id = "6e7f356c-6059-4799-b83a-c4744e4a7c2e"
+    credential = AzureCliCredential()
+
+    resource_client = ResourceManagementClient(credential, subscription_id)
+
+    network_client = NetworkManagementClient(credential, subscription_id)
+
+
+    def write_json(new_data, filename='fw.json'):
+        file_data=""
+        with open(filename,'r+') as file:
+            file_data = json.load(file)
+            #print(file_data["rules"][0]["rule_conditions"])
+            file_data["rules"][0]["rule_conditions"].append(new_data)
+            file.seek(0)
+            json.dump(file_data, file, indent = 4)
+        return file_data
+
+    # python object to be appended
+    y = {
+            "rule_condition_type": "NetworkRuleCondition",
+            "name": guid,
+            "sourceAddresses": [
+                pip
+            ],
+            "sourcePorts":[
+                "22"
+            ],
+            "destinationAddresses": [
+                destination_vnet
+            ],
+            "ipProtocols": [
+                "TCP"
+            ],
+            "destinationPorts": [
+                "22"
+            ]
+        }
+     
+    policy_rule=write_json(y)
+
+    FIREWALL_POLICY_RULE_GROUP = "SCNNetworkRuleCollectionGroup"
+    FIREWALL_POLICY = "afwpol-sail-wus-01"
+
+
+    firewall_policy_rule_group = network_client.firewall_policy_rule_groups.begin_create_or_update(GROUP_NAME,
+        FIREWALL_POLICY,
+        FIREWALL_POLICY_RULE_GROUP, policy_rule
+    )
+    print("Added the Firewall policy")
+
+def fetch_guid():
+    import uuid 
+    guid=uuid.uuid4()
+    return str(guid)
 
 # Fetching VM status from azure
 def fetch_vm_status_from_azure(ID,token):
@@ -181,7 +244,7 @@ def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
         resource_client = ResourceManagementClient(credential, subscription_id)
 
         # Set constants we need in multiple places.  You can change these values however you want.
-        rg_name=rg_name+"-sail-eus-prod-"+guid
+        rg_name=rg_name+"-sail-wus-"+guid
         RESOURCE_GROUP_NAME = rg_name
         LOCATION = loc
 
@@ -205,11 +268,11 @@ def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
 
 
         # Network and IP address names
-        VNET_NAME = vnet_name+"-sail-eus-prod-"+guid
+        VNET_NAME = vnet_name+"-sail-wus-"+guid
         SUBNET_NAME = vnet_name +"-SNET01"
-        IP_NAME = vm_name+"-IP01"+"-sail-eus-prod"
-        IP_CONFIG_NAME = vm_name+ "-IPCONFIG01"+"-sail-eus-prod"
-        NIC_NAME = vm_name+"-NIC01"+"-sail-eus-prod"
+        IP_NAME = vm_name+"-IP01"+"-sail-wus"
+        IP_CONFIG_NAME = vm_name+ "-IPCONFIG01"+"-sail-wus"
+        NIC_NAME = vm_name+"-NIC01"+"-sail-wus"
 
         # Get the management object for the network
         network_client = NetworkManagementClient(credential, subscription_id)
@@ -228,27 +291,56 @@ def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
             {
                 "location": LOCATION,
                 "address_space": {
-                    "address_prefixes": ["10.0.0.0/16"]
+                    "address_prefixes": ["10.16.0.0/16"]
                 }
             }
         )
 
         vnet_result = poller.result()
-        
-
         print(f"Provisioned virtual network {vnet_result.name} with address prefixes {vnet_result.address_space.address_prefixes}")
 
+    
+
         # 3 - Create the subnet
+        subres3 = SubResource(id="/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/resourceGroups/Hanu-Test-RG-01/providers/Microsoft.Network/routeTables/SCN-Test-Route")
+        SUBNET_DATA=Subnet(address_prefix= "10.16.0.0/24", route_table=subres3)
         poller = network_client.subnets.begin_create_or_update(RESOURCE_GROUP_NAME, 
-            VNET_NAME, SUBNET_NAME,
-            { "address_prefix": "10.0.0.0/24" }
+            VNET_NAME, SUBNET_NAME,SUBNET_DATA
         )
         subnet_result = poller.result()
 
         print(f"Provisioned virtual subnet {subnet_result.name} with address prefix {subnet_result.address_prefix}")
 
+
+        #Peering Virtual Networks
+        peer_vnet_name=vnet_name+"-sail-wus"
+        hub_subscription_id= "6e7f356c-6059-4799-b83a-c4744e4a7c2e"
+        hub_network_client = NetworkManagementClient(credential, hub_subscription_id)
+        hub_resource_client = ResourceManagementClient(credential, hub_subscription_id)
+        resource_client.providers.register('Microsoft.Network')
+        hub_resource_client.providers.register('Microsoft.Network')
+
+        res1 = resource_client.resources.get(RESOURCE_GROUP_NAME, "Microsoft.Network", "", "virtualNetworks", VNET_NAME, "2022-01-01")
+        res2 = hub_resource_client.resources.get("rg-sail-wus-hub-001", "Microsoft.Network", "", "virtualNetworks", "vnet-sail-wus-hub-001", "2022-01-01")
+
+        subres1 = SubResource(id=res1.id)
+        subres2 = SubResource(id=res2.id)
+
+        peering_params1 =  VirtualNetworkPeering(allow_virtual_network_access=True, allow_forwarded_traffic=True ,allow_gateway_transit=True,remote_virtual_network=subres1)
+        peering_params2 =  VirtualNetworkPeering(allow_virtual_network_access=True, allow_forwarded_traffic=True, use_remote_gateways=True,remote_virtual_network=subres2)
+
+        peer_name_1="vnet-sail-wus-hub-001-To-"+peer_vnet_name
+        peer_name_2=peer_vnet_name+"-To-vnet-sail-wus-hub-001"
+        poller2 = network_client.virtual_network_peerings.begin_create_or_update(RESOURCE_GROUP_NAME, VNET_NAME, peer_name_2, peering_params2)
+        poller1 = hub_network_client.virtual_network_peerings.begin_create_or_update("rg-sail-wus-hub-001", "vnet-sail-wus-hub-001", peer_name_1, peering_params1)
+
+        peer_result1=poller1.result()
+        peer_result2=poller2.result()
+        
+
+        print(f"Created virtual network peering b/w Hub and SCN VNETS with names {peer_result1.name} and {peer_result2.name}")
+
         # 4 - Create the IP address
-        """"
         poller = network_client.public_ip_addresses.begin_create_or_update(RESOURCE_GROUP_NAME,
             IP_NAME,
             {
@@ -262,9 +354,8 @@ def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
         ip_address_result = poller.result()
 
         print(f"Provisioned public IP address {ip_address_result.name} with address {ip_address_result.ip_address}")
-        """
         # Creating the Network Security Group with default values
-        nsg_name=vm_name+"-"+nsg_name+"-sail-eus-prod"
+        nsg_name=vm_name+"-"+nsg_name+"-sail-wus"
         
         nsg_params = NetworkSecurityGroup(id=nsg_name,location=LOCATION)
         nsg = network_client.network_security_groups.begin_create_or_update(RESOURCE_GROUP_NAME, nsg_name, parameters=nsg_params)
@@ -277,8 +368,8 @@ def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
                 "location": LOCATION,
                 "ip_configurations": [ {
                     "name": IP_CONFIG_NAME,
-                    "subnet": { "id": subnet_result.id }
-                    #"public_ip_address": {"id": ip_address_result.id }
+                    "subnet": { "id": subnet_result.id },
+                    "public_ip_address": {"id": ip_address_result.id }
                 }],
                 "network_security_group": {
                 "id": nsg.id
@@ -292,12 +383,16 @@ def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
 
         print(f"Provisioned network interface client {nic_result.name}")
 
+        #Adding PIP in FW Rule
+
+        add_fw_rule(ip_address_result.ip_address,guid,str(subnet_result.address_prefix))
+
         # 6 - Create the virtual machine
 
         # Get the management object for virtual machines
         compute_client = ComputeManagementClient(credential, subscription_id)
 
-        VM_NAME = vm_name+"-sail-eus-prod"+guid
+        VM_NAME = vm_name+"-sail-wus-"+guid
         USERNAME = "pythonazureuser"
         PASSWORD = "ChangeM3N0w!"
 
@@ -311,7 +406,7 @@ def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
                 "location": LOCATION,
                 "storage_profile": {
                     'image_reference': {
-                    'id' : '/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/resourceGroups/NginxImageStorageRg/providers/Microsoft.Compute/images/securecomputationnode'
+                    'id' : '/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/resourceGroups/InitializerImageStorageRg/providers/Microsoft.Compute/images/securecomputationnode'
                 }
                 },
                 "hardware_profile": {
@@ -336,12 +431,12 @@ def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
         print(f"Provisioned virtual machine {vm_result.name}")
         return [vm_id,"OK"]
     except:
-        print("Authentication Error")
-        return ['None',"Authentication Error"]
+        print("Authentication Error Or Resource Creation Error")
+        return ['None',"Authentication Error Or Resource Creation Error"]
 
 
 # Inserting new status in the database
-def insert_db(vm_name,vm_id,state,dt):
+def insert_db(vm_name,guid,vm_id,state):
     # Intializing connection parameter to connect to the database
     config = {
     'host':'scntest.mysql.database.azure.com',
@@ -350,6 +445,8 @@ def insert_db(vm_name,vm_id,state,dt):
     'database':'sail_test_db',
     'client_flags': [mysql.connector.ClientFlag.SSL],
     'ssl_ca': 'C:\\Users\hanuadmin\Downloads\Cer\DigiCertGlobalRootG2.crt.pem'
+    #'/home/sailadmin/sail_plugin/Digi_Certificate/DigiCertAssuredIDRootCA.crt.pem'
+ 
     }
 
     # Construct connection string and intialize database pointer
@@ -366,9 +463,10 @@ def insert_db(vm_name,vm_id,state,dt):
             print(err)
     else:
         cursor = conn.cursor()
-
+    now = datetime.now()
+    now=str(now) 
     # Inserting data into table
-    cursor.execute("INSERT INTO scn_provisioning_plugin (vm_name, resource_id,resoure_state,time) VALUES (%s, %s, %s,%s);", (vm_name,vm_id,state,dt))
+    cursor.execute("INSERT INTO scn_provisioning_plugin (vm_name, guid, resource_id,resource_state,time) VALUES (%s, %s, %s,%s, %s);", (vm_name,guid,vm_id,state,now))
     print("Inserted",cursor.rowcount,"row(s) of data.")
     
 
@@ -406,30 +504,56 @@ def json_write(vm_id,ROI,DOOI,DCI,DI,TKAC,EAESK,ECB,RORP,DOORP,AORP,SORP,EADEK,I
     with open("IV.json", "w") as o:
 
         o.write(json_string)
-        
-# Container name
-CONTAINERNAME = "binaryfiles"
- 
+
 # Fetching the images from azure blob
 def blob_fetch():
-    container = ContainerClient.from_connection_string(conn_str="DefaultEndpointsProtocol=https;AccountName=test3storage;AccountKey=ulkTo6nj49BOTf+8vFafDMSrWowuTBvzkgH+Umf+e1HngiTD8DblBQ7gE2vMXPIOblC735M4lEfF+AStRa3PcA==;EndpointSuffix=core.windows.net", container_name = CONTAINERNAME)
-    blob_list = container.list_blobs()
-    sorted_blob_list = sorted(blob_list,key=lambda x: x.creation_time, reverse=True)
-    print(sorted_blob_list[0].name)
-    blob_download(sorted_blob_list[0].name)
+    return "sshddejdjeigtdfvxdfdtrscsbkdhehdj"
+    """
+    scn_blob_name="scnbinaryblob"
+    STORAGEACCOUNTURL = "https://sailvmimages1112.blob.core.windows.net"
+    STORAGEACCOUNTKEY = "ErDnlB2mILTBYnnYuBnw2bUeNKkW2JgYTeWCk4VR1VK+zmGtDKWhuv6AwdBQ4Fz25ndCSJtdG3Uu+AStxho3bw=="
+    CONTAINERNAME = "images"
+    BLOBNAME = "testfile.txt"
+
+    q=[]
+
+    blob_service_client_instance = BlobServiceClient(
+        account_url=STORAGEACCOUNTURL, credential=STORAGEACCOUNTKEY)
+
+    blob_client_instance = blob_service_client_instance.get_blob_client(
+        CONTAINERNAME, BLOBNAME, snapshot=None)
+    cst=ContainerClient( account_url= STORAGEACCOUNTURL, container_name= CONTAINERNAME,credential=STORAGEACCOUNTKEY)
+    #container_client = blob_service_client_instance(CONTAINERNAME)
+
+    blob_list = cst.list_blobs()
+    scn_blob_list=[]
+    for blob in blob_list:
+        if blob.name==scn_blob_name
+            scn_blob_list.append(blob)
+    q=[]
+    for blob in scn_blob_list:
+        q.append(str(blob.last_modified))
+    
+    for blob in blob_list:
+        q.append(str(blob.last_modified))
+    blob_download(max(q))
         
 
 # Downloading the blob file from azure conatainer
 def blob_download(file_name):
     
-    blob_service_client = BlobServiceClient.from_connection_string("DefaultEndpointsProtocol=https;AccountName=test3storage;AccountKey=ulkTo6nj49BOTf+8vFafDMSrWowuTBvzkgH+Umf+e1HngiTD8DblBQ7gE2vMXPIOblC735M4lEfF+AStRa3PcA==;EndpointSuffix=core.windows.net")
-    local_path = r"C:\Downloads\Documents"
-    download_file_path = os.path.join(local_path, str.replace(file_name ,'.rar', 'DOWNLOAD.rar'))
-    blob_client = blob_service_client.get_container_client(container= CONTAINERNAME) 
+    local_file_name=file_name
+    blob_service_client = BlobServiceClient.from_connection_string("DefaultEndpointsProtocol=https;AccountName=pkteststg1;AccountKey=vWGQatTKtuGEa+Tvv1RKAAMvIwC5oGVp6cTpaDijRsf0rXGRhReuUHtDFcqbaP063tF5j4wB+wNY+ASt/wWTOw==;EndpointSuffix=core.windows.net")
+    local_path = r"D:\\coDE\\tset"
+
+
+    download_file_path = local_path
+    blob_client = blob_service_client.get_container_client(container= "pktestcont") 
     print("\nDownloading blob to \n\t" + download_file_path)
 
     with open(download_file_path, "wb") as download_file:
-        download_file.write(blob_client.download_blob(file_name).readall())
+    download_file.write(blob_client.download_blob(local_file_name).readall())
+    """
 
 #Main Function
 if __name__ == "__main__":
