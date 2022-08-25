@@ -11,8 +11,15 @@ Setting the correct azure credential environment variables in the terminal:
 ```
 export AZURE_SUBSCRIPTION_ID="3d2b9951-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 export AZURE_TENANT_ID="3e74e5ef-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-export AZURE_CLIENT_ID="4f909fab-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-export AZURE_CLIENT_SECRET="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+export AZURE_CLIENT_ID="4f909fab-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -- SP APP ID
+export AZURE_CLIENT_SECRET="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" -- SP APP PASSWORD
+```
+
+Edit Deploy.py parameters
+```
+vmImageResourceId - should be set to /subscriptions/{AZURE_SUBSCRIPTION_ID}/resourceGroups/InitializerImageStorage-WUS-Rg/providers/Microsoft.Compute/images/
+subnetName - In interim append to subnet of spoke - this will be different in final implementation ex: snet-sail-wus-dev-01
+virtualNetworkId - resource ID of vnet in subscription
 ```
 Then run `sudo -E ./DeployPlatform.sh -p [Purpose:[Nightly, Bugfix, etc..]] -o [Owner: [Prawal, Stanley]]` from the root directory of the repository.
 -E is needed to inherit the environment variables from the current user(non-root) shell.
