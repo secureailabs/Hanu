@@ -16,8 +16,8 @@ import win32com.client
 import os
 
 #Initializing Service Principal
-client_id="a547fa4d-296c-4c1c-ab90-c5010bd1ae5f"
-client_secret="Ne28Q~cXnQB_FVv4~3Wy-VgzfAVPOW3NVI3GTbkI"
+client_id="5d2ea8c7-09ea-41ce-80b6-030777fce49b"
+client_secret="3PG8Q~0Jh1HU~Y3DoadZPUb5noEiJnesEJGXScLl"
 tenant_id="3e74e5ef-7e6a-4cf0-8573-680ca49b64d8"
 
 #Folder Monitoring Thread
