@@ -6,7 +6,7 @@ from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
 
-from azure.identity import AzureCliCredential
+from azure.identity import ClientSecretCredential
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.network.models import VirtualNetworkPeering
 from azure.mgmt.network.models import SubResource
@@ -27,8 +27,8 @@ from mysql.connector import errorcode
 
 from datetime import datetime
 
-client_id="a547fa4d-296c-4c1c-ab90-c5010bd1ae5f"
-client_secret="Ne28Q~cXnQB_FVv4~3Wy-VgzfAVPOW3NVI3GTbkI"
+client_id="5d2ea8c7-09ea-41ce-80b6-030777fce49b"
+client_secret="3PG8Q~0Jh1HU~Y3DoadZPUb5noEiJnesEJGXScLl"
 tenant_id="3e74e5ef-7e6a-4cf0-8573-680ca49b64d8"
 
 my_observer = Observer()
@@ -138,7 +138,7 @@ def on_created(event):
 def add_fw_rule(pip,guid,destination_vnet):
     GROUP_NAME = "rg-sail-wus-hub-001"
     subscription_id = "6e7f356c-6059-4799-b83a-c4744e4a7c2e"
-    credential = AzureCliCredential()
+    credential = ClientSecretCredential(tenant_id,client_id,client_secret)
 
     resource_client = ResourceManagementClient(credential, subscription_id)
 
@@ -179,7 +179,7 @@ def add_fw_rule(pip,guid,destination_vnet):
     policy_rule=write_json(y)
 
     FIREWALL_POLICY_RULE_GROUP = "PlatformNetworkRuleCollectionGroup"
-    FIREWALL_POLICY = "afwpol-sail-wus-01"
+    FIREWALL_POLICY = "afwpol-sail-wus-001"
 
 
     firewall_policy_rule_group = network_client.firewall_policy_rule_groups.begin_create_or_update(GROUP_NAME,
@@ -211,7 +211,7 @@ def fetch_vm_status_from_azure(ID,token):
 def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
     try:
 
-        credential = AzureCliCredential()
+        credential = ClientSecretCredential(tenant_id,client_id,client_secret)
 
     # Retrieve subscription ID from environment variable.
         subscription_id = "b7a46052-b7b1-433e-9147-56efbfe28ac5"
@@ -277,7 +277,7 @@ def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
 
         vnet_result = poller.result()
 
-        subres3 = SubResource(id="/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/resourceGroups/Hanu-Test-RG-01/providers/Microsoft.Network/routeTables/Platform-Test-Route")
+        subres3 = SubResource(id="/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/resourceGroups/Payload-Route-Dev-RG/providers/Microsoft.Network/routeTables/Platform-DEV-ROUTE")
         SUBNET_DATA=Subnet(address_prefix= "10.21.0.0/24", route_table=subres3)
 
         print(f"Provisioned virtual network {vnet_result.name} with address prefixes {vnet_result.address_space.address_prefixes}")
@@ -385,7 +385,7 @@ def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
                 "location": LOCATION,
                 "storage_profile": {
                     'image_reference': {
-                    'id' : '/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/resourceGroups/InitializerImageStorageRg/providers/Microsoft.Compute/images/apiservices'
+                    'id' : '/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/resourceGroups/InitializerImageStorage-WUS-Rg/providers/Microsoft.Compute/images/apiservices'
                 }
                 },
                 "hardware_profile": {
