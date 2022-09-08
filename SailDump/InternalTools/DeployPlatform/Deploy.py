@@ -44,7 +44,7 @@ def deploy_module(account_credentials, deployment_name, module_name):
         + module_name,
         "adminUserName": "sailuser",
         "adminPassword": "SailPassword@123",
-        "subnetName": "snet-sail-wus-dev-01",  # Change this line depending on your vnet subnets
+        "subnetName": "snet-sail-wus-dev-platformservice-01",
         "virtualNetworkId": "/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/resourceGroups/"  # change this line depending on your subscription
         + "rg-sail-wus-dev-vnet-01/providers/Microsoft.Network/virtualNetworks/vnet-sail-wus-dev-01",  # change this line depending on your vnet
     }
@@ -138,7 +138,6 @@ if __name__ == "__main__":
     if not OWNER or not PURPOSE:
         print("Please set the OWNER and PURPOSE environment variables")
         exit(0)
-
     deployment_id = OWNER + "-" + str(uuid.uuid1()) + "-" + PURPOSE
 
     # Authenticate the azure credentials
