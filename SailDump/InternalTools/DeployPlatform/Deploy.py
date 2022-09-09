@@ -69,6 +69,7 @@ def deploy_module(account_credentials, deployment_name, module_name, subscriptio
         "adminUserName": "sailuser",
         "adminPassword": "SailPassword@123",
     }
+
     if subscription_id == "b7a46052-b7b1-433e-9147-56efbfe28ac5":
         parameters.update(development_parameters)
     elif subscription_id == "40cdb551-8a8d-401f-b884-db1599022002":
