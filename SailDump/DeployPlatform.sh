@@ -42,25 +42,25 @@ if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
   echo "environment variable AZURE_SUBSCRIPTION_ID is undefined"
   exit 1
 else
-  AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID}
+  AZURE_SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID}"
 fi
 if [ -z "${AZURE_TENANT_ID}" ]; then
   echo "environment variable AZURE_TENANT_ID is undefined"
   exit 1
 else
-  AZURE_TENANT_ID=${AZURE_TENANT_ID}
+  AZURE_TENANT_ID="${AZURE_TENANT_ID}"
 fi
 if [ -z "${AZURE_CLIENT_ID}" ]; then
   echo "environment variable AZURE_CLIENT_ID is undefined"
   exit 1
 else
-  AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+  AZURE_CLIENT_ID="${AZURE_CLIENT_ID}"
 fi
 if [ -z "${AZURE_CLIENT_SECRET}" ]; then
   echo "environment variable AZURE_CLIENT_SECRET is undefined"
   exit 1
 else
-  AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+  AZURE_CLIENT_SECRET="${AZURE_CLIENT_SECRET}"
 fi
 
 # Build and Package the Platform Services
