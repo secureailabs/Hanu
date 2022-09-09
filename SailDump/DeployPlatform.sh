@@ -37,7 +37,7 @@ fi
 echo "Purpose: $purpose"
 echo "Owner: $owner"
 
-Check for Azure environment variables
+# Check for Azure environment variables
 if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
   echo "environment variable AZURE_SUBSCRIPTION_ID is undefined"
   exit 1
