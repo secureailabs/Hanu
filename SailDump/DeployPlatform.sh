@@ -90,16 +90,16 @@ fi
 # Run the docker image to deploy the application on the Azure
 pushd $tempDeployDir
 docker run \
-  -it \
+  -t \
   -v $(pwd):/app \
-  # --env AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID \
-  # --env AZURE_TENANT_ID=$AZURE_TENANT_ID \
-  # --env AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
-  # --env AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET \
   --env OWNER=$owner \
   --env PURPOSE=$purpose \
   azuredeploymenttools
 popd
-
+  # --env AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID \
+  # --env AZURE_TENANT_ID=$AZURE_TENANT_ID \
+  # --env AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
+  # --env AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET \
+  
 # Cleanup the temporary directory
 rm -rf $tempDeployDir

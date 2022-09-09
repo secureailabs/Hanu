@@ -163,6 +163,7 @@ if __name__ == "__main__":
     AZURE_CLIENT_SECRET = os.environ.get("AZURE_CLIENT_SECRET")
     OWNER = os.environ.get("OWNER")
     PURPOSE = os.environ.get("PURPOSE")
+    print(AZURE_SUBSCRIPTION_ID)
 
     if not OWNER or not PURPOSE:
         print("Please set the OWNER and PURPOSE environment variables")
