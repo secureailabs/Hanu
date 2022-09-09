@@ -43,12 +43,16 @@ echo "Owner: $owner"
 # Check for Passed in Azure environment variables
 if ["$5"]; then
   AZURE_SUBSCRIPTION_ID=$5
+fi
 if ["$5"]; then
   AZURE_TENANT_ID=$6
+fi
 if ["$5"]; then
   AZURE_CLIENT_ID=$7
+fi
 if ["$5"]; then
   AZURE_CLIENT_SECRET=$8
+fi
 
 # Check for Azure environment variables
 if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
