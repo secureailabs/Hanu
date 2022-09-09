@@ -4,9 +4,10 @@ name: Deploy Platform
 on:
   workflow_dispatch:
     inputs:
-      name:
-        type: choice
+      subscription:
         description: Choose Subscription
+        required: true
+        type: choice
         options:
           - Development
           - Release Candidate
@@ -35,61 +36,43 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Condition 1 Development
-        if: ${{ github.event.inputs.name == 'Development' }}
+        if: ${{ github.event.inputs.subscription == 'Development' }}
         env:
-          AZURE_SUBSCRIPTION_ID: b7a46052-b7b1-433e-9147-56efbfe28ac5
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.DEVELOPMENT_AZURE_SUBSCRIPTION_ID }}
         run: |
           echo "${{ github.head_ref }}"
           echo "${{ github.workspace }}"
           sudo chown -R $USER:$USER ${{ github.workspace }}
           set -e
-          pwd
-          ls -l
-          docker -v
           cd SailDump
+          pwd
           ls -l
           sudo -E ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }}
 
       - name: Condition 2 Release Candidate
-        if: ${{ github.event.inputs.name == 'Release Candidate' }}
-        run: |
-          echo "${{ github.head_ref }}"
-          echo "${{ github.workspace }}"
-          sudo chown -R $USER:$USER ${{ github.workspace }}
-          set -e
-          pwd
-          ls -l
-          echo "${{ github.event.inputs.purpose }} !!! Release Candidate !!!"
-          echo "${{ github.event.inputs.purpose }} ${{ github.event.inputs.name }}"
-          echo "AZURE_TENANT_ID: $AZURE_TENANT_ID"
-          echo "AZURE_CLIENT_ID: $AZURE_CLIENT_ID"
-          echo "AZURE_CLIENT_SECRET: $AZURE_CLIENT_SECRET"
-          echo "Release Candidate AZURE_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID"
-          docker -v
-          cd SailDump
-          ls -l
-          sudo ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }} ${{ secrets.DEVELOPMENT_AZURE_SUBSCRIPTION_ID }} ${{ secrets.AZURE_TENANT_ID }}  ${{ secrets.SERVICE_PRINCIPAL_DEPLOYPLATFORM_AZURE_CLIENT_ID }} ${{ secrets.SERVICE_PRINCIPAL_DEPLOYPLATFORM_AZURE_CLIENT_SECRET }}
+        if: ${{ github.event.inputs.subscription == 'Release Candidate' }}
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.RELEASE_CANDIDATE_AZURE_SUBSCRIPTION_ID }}
-
-      - name: Condition 3 ProductionGA
-        if: ${{ github.event.inputs.name == 'ProductionGA' }}
         run: |
           echo "${{ github.head_ref }}"
           echo "${{ github.workspace }}"
           sudo chown -R $USER:$USER ${{ github.workspace }}
           set -e
+          cd SailDump
           pwd
           ls -l
-          echo "${{ github.event.inputs.purpose }} !!! ProductionGA !!!"
-          echo "${{ github.event.inputs.purpose }} ${{ github.event.inputs.name }}"
-          echo "AZURE_TENANT_ID: $AZURE_TENANT_ID"
-          echo "AZURE_CLIENT_ID: $AZURE_CLIENT_ID"
-          echo "AZURE_CLIENT_SECRET: $AZURE_CLIENT_SECRET"
-          echo "ProductionGA AZURE_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID"
-          docker -v
-          cd SailDump
-          ls -l
-          sudo ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }} $AZURE_SUBSCRIPTION_ID $AZURE_TENANT_ID $AZURE_CLIENT_ID $AZURE_CLIENT_SECRET
+          sudo -E ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }}
+
+      - name: Condition 3 ProductionGA
+        if: ${{ github.event.inputs.subscription == 'ProductionGA' }}
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.PRODUCTION_GA_AZURE_SUBSCRIPTION_ID }}
+        run: |
+          echo "${{ github.head_ref }}"
+          echo "${{ github.workspace }}"
+          sudo chown -R $USER:$USER ${{ github.workspace }}
+          set -e
+          cd SailDump
+          pwd
+          ls -l
+          sudo -E ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }}
