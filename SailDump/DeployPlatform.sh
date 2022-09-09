@@ -37,23 +37,31 @@ fi
 echo "Purpose: $purpose"
 echo "Owner: $owner"
 
-# Check for Azure environment variables
-# if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
-#   echo "environment variable AZURE_SUBSCRIPTION_ID is undefined"
-#   exit 1
-# fi
-# if [ -z "${AZURE_TENANT_ID}" ]; then
-#   echo "environment variable AZURE_TENANT_ID is undefined"
-#   exit 1
-# fi
-# if [ -z "${AZURE_CLIENT_ID}" ]; then
-#   echo "environment variable AZURE_CLIENT_ID is undefined"
-#   exit 1
-# fi
-# if [ -z "${AZURE_CLIENT_SECRET}" ]; then
-#   echo "environment variable AZURE_CLIENT_SECRET is undefined"
-#   exit 1
-# fi
+Check for Azure environment variables
+if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
+  echo "environment variable AZURE_SUBSCRIPTION_ID is undefined"
+  exit 1
+else
+  AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID}
+fi
+if [ -z "${AZURE_TENANT_ID}" ]; then
+  echo "environment variable AZURE_TENANT_ID is undefined"
+  exit 1
+else
+  AZURE_TENANT_ID=${AZURE_TENANT_ID}
+fi
+if [ -z "${AZURE_CLIENT_ID}" ]; then
+  echo "environment variable AZURE_CLIENT_ID is undefined"
+  exit 1
+else
+  AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+fi
+if [ -z "${AZURE_CLIENT_SECRET}" ]; then
+  echo "environment variable AZURE_CLIENT_SECRET is undefined"
+  exit 1
+else
+  AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+fi
 
 # Build and Package the Platform Services
 make package_apiservices -j
@@ -94,12 +102,12 @@ docker run \
   -v $(pwd):/app \
   --env OWNER=$owner \
   --env PURPOSE=$purpose \
+  --env AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID \
+  --env AZURE_TENANT_ID=$AZURE_TENANT_ID \
+  --env AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
+  --env AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET \
   azuredeploymenttools
 popd
-  # --env AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID \
-  # --env AZURE_TENANT_ID=$AZURE_TENANT_ID \
-  # --env AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
-  # --env AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET \
   
 # Cleanup the temporary directory
 rm -rf $tempDeployDir
