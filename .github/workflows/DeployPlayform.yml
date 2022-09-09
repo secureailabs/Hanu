@@ -55,7 +55,7 @@ jobs:
           docker -v
           cd SailDump
           ls -l
-          sudo ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }}
+          sudo ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }} $AZURE_SUBSCRIPTION_ID $AZURE_TENANT_ID $AZURE_CLIENT_ID $AZURE_CLIENT_SECRET
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.DEVELOPMENT_AZURE_SUBSCRIPTION_ID }}
 
@@ -77,7 +77,7 @@ jobs:
           docker -v
           cd SailDump
           ls -l
-          sudo ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }}
+          sudo ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }} $AZURE_SUBSCRIPTION_ID $AZURE_TENANT_ID $AZURE_CLIENT_ID $AZURE_CLIENT_SECRET
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.RELEASE_CANDIDATE_AZURE_SUBSCRIPTION_ID }}
 
