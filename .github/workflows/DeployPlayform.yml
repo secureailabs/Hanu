@@ -48,7 +48,7 @@ jobs:
           docker -v
           cd SailDump
           ls -l
-          sudo ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }}
+          sudo -E ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }}
 
       - name: Condition 2 Release Candidate
         if: ${{ github.event.inputs.name == 'Release Candidate' }}
