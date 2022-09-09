@@ -83,23 +83,23 @@ retVal=$?
 if [ $retVal -ne 0 ]; then
   echo "Error: Docker image not found"
   pushd $tempDeployDir
-  docker build -t azuredeploymenttools .
+  docker build --build-arg AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID --build-arg AZURE_TENANT_ID=$AZURE_TENANT_ID --build-arg AZURE_CLIENT_ID=$AZURE_CLIENT_ID --build-arg AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET -t azuredeploymenttools .
   popd
 fi
 
-# # Run the docker image to deploy the application on the Azure
-# pushd $tempDeployDir
-# docker run \
-#   -it \
-#   -v $(pwd):/app \
-#   --env AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID \
-#   --env AZURE_TENANT_ID=$AZURE_TENANT_ID \
-#   --env AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
-#   --env AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET \
-#   --env OWNER=$owner \
-#   --env PURPOSE=$purpose \
-#   azuredeploymenttools
-# popd
+# Run the docker image to deploy the application on the Azure
+pushd $tempDeployDir
+docker run \
+  -it \
+  -v $(pwd):/app \
+  # --env AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID \
+  # --env AZURE_TENANT_ID=$AZURE_TENANT_ID \
+  # --env AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
+  # --env AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET \
+  --env OWNER=$owner \
+  --env PURPOSE=$purpose \
+  azuredeploymenttools
+popd
 
-# # Cleanup the temporary directory
-# rm -rf $tempDeployDir
+# Cleanup the temporary directory
+rm -rf $tempDeployDir
