@@ -36,6 +36,8 @@ jobs:
 
       - name: Condition 1 Development
         if: ${{ github.event.inputs.name == 'Development' }}
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.DEVELOPMENT_AZURE_SUBSCRIPTION_ID }}
         run: |
           echo "${{ github.head_ref }}"
           echo "${{ github.workspace }}"
@@ -47,8 +49,6 @@ jobs:
           cd SailDump
           ls -l
           sudo ./DeployPlatform.sh -p ${{ github.event.inputs.purpose }} -o ${{ github.event.inputs.owner }}
-        env:
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.DEVELOPMENT_AZURE_SUBSCRIPTION_ID }}
 
       - name: Condition 2 Release Candidate
         if: ${{ github.event.inputs.name == 'Release Candidate' }}
