@@ -38,22 +38,22 @@ echo "Purpose: $purpose"
 echo "Owner: $owner"
 
 # Check for Azure environment variables
-if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
-  echo "environment variable AZURE_SUBSCRIPTION_ID is undefined"
-  exit 1
-fi
-if [ -z "${AZURE_TENANT_ID}" ]; then
-  echo "environment variable AZURE_TENANT_ID is undefined"
-  exit 1
-fi
-if [ -z "${AZURE_CLIENT_ID}" ]; then
-  echo "environment variable AZURE_CLIENT_ID is undefined"
-  exit 1
-fi
-if [ -z "${AZURE_CLIENT_SECRET}" ]; then
-  echo "environment variable AZURE_CLIENT_SECRET is undefined"
-  exit 1
-fi
+# if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
+#   echo "environment variable AZURE_SUBSCRIPTION_ID is undefined"
+#   exit 1
+# fi
+# if [ -z "${AZURE_TENANT_ID}" ]; then
+#   echo "environment variable AZURE_TENANT_ID is undefined"
+#   exit 1
+# fi
+# if [ -z "${AZURE_CLIENT_ID}" ]; then
+#   echo "environment variable AZURE_CLIENT_ID is undefined"
+#   exit 1
+# fi
+# if [ -z "${AZURE_CLIENT_SECRET}" ]; then
+#   echo "environment variable AZURE_CLIENT_SECRET is undefined"
+#   exit 1
+# fi
 
 # Build and Package the Platform Services
 make package_apiservices -j
