@@ -54,7 +54,7 @@ jobs:
           echo "Development AZURE_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID"
           docker -v
           cd SailDump
-          ll
+          ls -l
           export AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID
           export AZURE_TENANT_ID=$AZURE_TENANT_ID
           export AZURE_CLIENT_ID=$AZURE_CLIENT_ID
@@ -80,7 +80,7 @@ jobs:
           echo "Release Candidate AZURE_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID"
           docker -v
           cd SailDump
-          ll
+          ls -l
           export AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID
           export AZURE_TENANT_ID=$AZURE_TENANT_ID
           export AZURE_CLIENT_ID=$AZURE_CLIENT_ID
@@ -106,7 +106,7 @@ jobs:
           echo "ProductionGA AZURE_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID"
           docker -v
           cd SailDump
-          ll
+          ls -l
           export AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID
           export AZURE_TENANT_ID=$AZURE_TENANT_ID
           export AZURE_CLIENT_ID=$AZURE_CLIENT_ID
