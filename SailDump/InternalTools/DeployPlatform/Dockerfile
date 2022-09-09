@@ -25,6 +25,10 @@ COPY requirements.txt /requirements.txt
 RUN pip3 install -r requirements.txt
 
 COPY Entrypoint.sh /Entrypoint.sh
+RUN AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID \
+  AZURE_TENANT_ID=$AZURE_TENANT_ID \
+  AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
+  AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET
 RUN chmod +x /Entrypoint.sh
 
 CMD ["/bin/bash", "/Entrypoint.sh"]
