@@ -43,15 +43,23 @@ echo "Owner: $owner"
 # Check for Passed in Azure environment variables
 if ["$5"]; then
   AZURE_SUBSCRIPTION_ID=$5
+else
+  echo "Passed environment variable AZURE_SUBSCRIPTION_ID was not defined"
 fi
 if ["$5"]; then
   AZURE_TENANT_ID=$6
+else
+  echo "Passed environment variable AZURE_TENANT_ID was not defined"
 fi
 if ["$5"]; then
   AZURE_CLIENT_ID=$7
+else
+  echo "Passed environment variable AZURE_CLIENT_ID was not defined"
 fi
 if ["$5"]; then
   AZURE_CLIENT_SECRET=$8
+else
+  echo "Passed environment variable AZURE_CLIENT_SECRET was not defined"
 fi
 
 # Check for Azure environment variables
