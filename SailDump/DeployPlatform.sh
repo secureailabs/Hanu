@@ -4,12 +4,15 @@ export tempDeployDir=$(mktemp -d --tmpdir=.)
 PrintHelp()
 {
     echo ""
-    echo "Usage: $0 -p [Purpose:[Nightly, Bugfix, etc..]] -o [Owner: [Prawal, Stanley]]"
+    echo "Usage: $0 -p [Purpose:[Nightly, Bugfix, etc..]] -o [Owner: [Prawal, Stanley]] \$AZURE_SUBSCRIPTION_ID \$AZURE_TENANT_ID \$AZURE_CLIENT_ID \$AZURE_CLIENT_SECRET"
     echo -e "\t-p Purpose: purpose of deployment. No spaces. "
     echo -e "\t-o Triggered By: deployment owner name. No spaces."
+    echo -e "\t-Environment_Variable \$AZURE_SUBSCRIPTION_ID"
+    echo -e "\t-Environment_Variable \$AZURE_TENANT_ID"
+    echo -e "\t-Environment_Variable \$AZURE_CLIENT_ID"
+    echo -e "\t-Environment_Variable \$AZURE_CLIENT_SECRET"
     exit 1 # Exit script after printing help
 }
-
 # Check if docker is installed
 docker --version
 retVal=$?
@@ -37,30 +40,32 @@ fi
 echo "Purpose: $purpose"
 echo "Owner: $owner"
 
+# Check for Passed in Azure environment variables
+if ["$5"]; then
+  AZURE_SUBSCRIPTION_ID=$5
+if ["$5"]; then
+  AZURE_TENANT_ID=$6
+if ["$5"]; then
+  AZURE_CLIENT_ID=$7
+if ["$5"]; then
+  AZURE_CLIENT_SECRET=$8
+
 # Check for Azure environment variables
 if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
   echo "environment variable AZURE_SUBSCRIPTION_ID is undefined"
   exit 1
-else
-  AZURE_SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID}"
 fi
 if [ -z "${AZURE_TENANT_ID}" ]; then
   echo "environment variable AZURE_TENANT_ID is undefined"
   exit 1
-else
-  AZURE_TENANT_ID="${AZURE_TENANT_ID}"
 fi
 if [ -z "${AZURE_CLIENT_ID}" ]; then
   echo "environment variable AZURE_CLIENT_ID is undefined"
   exit 1
-else
-  AZURE_CLIENT_ID="${AZURE_CLIENT_ID}"
 fi
 if [ -z "${AZURE_CLIENT_SECRET}" ]; then
   echo "environment variable AZURE_CLIENT_SECRET is undefined"
   exit 1
-else
-  AZURE_CLIENT_SECRET="${AZURE_CLIENT_SECRET}"
 fi
 
 # Build and Package the Platform Services
