@@ -90,7 +90,7 @@ fi
 # Run the docker image to deploy the application on the Azure
 pushd $tempDeployDir
 docker run \
-  -it \
+  -t \
   -v $(pwd):/app \
   --env OWNER=$owner \
   --env PURPOSE=$purpose \
