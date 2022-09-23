@@ -22,9 +22,7 @@ tenant_id="3e74e5ef-7e6a-4cf0-8573-680ca49b64d8"
 my_observer = Observer()
 
 #Path to monitor for json files please change this path to your monitoring path
-path = "C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\AZURESENTINELPLUGIN\Monitor"
-#"C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\AZURESENTINELPLUGIN\Monitor"
-
+path = "/home/sailadmin/Azure_Sentinel_Plugin/Monitor"
 patterns = ["*.json"]
 
 ignore_patterns = None
@@ -44,7 +42,7 @@ config = {
   'password':'123@hanu123@HANU',
   'database':'sail_test_db',
   'client_flags': [mysql.connector.ClientFlag.SSL],
-  'ssl_ca': 'C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\DigiCertAssuredIDRootCA.crt.pem'
+  'ssl_ca': '/home/sailadmin/Azure_Sentinel_Plugin/Sql_Certificate/DigiCertAssuredIDRootCA.crt (1).pem'
 }
 
 # Intializing pointer whenever we need to update the database
@@ -81,7 +79,7 @@ def drop_db(cursor):
     # query to recreate the table
     cursor.execute("CREATE TABLE sentinal_plugin (id serial PRIMARY KEY, place VARCHAR(80), log VARCHAR(500), timeframe VARCHAR(100))")
 
-    cursor.execute("CREATE TABLE log_sentinal_plugin(id serial PRIMARY KEY, tenant_ids VARCHAR(500),source_system VARCHAR(500),caller_ip VARCHAR(500),category_value VARCHAR(500),correlation_id VARCHAR(500),authorization VARCHAR(500),authorization_d VARCHAR(500),claims VARCHAR(500), claims_d VARCHAR(500),level VARCHAR(500),operation_name_value VARCHAR(500),properties VARCHAR(500),properties_d VARCHAR(500),caller VARCHAR(500),event_data_id VARCHAR(500),event_sub_timestamp VARCHAR(500),http_request VARCHAR(500),operation_id VARCHAR(500),resource_group VARCHAR(500),resource_provider_value VARCHAR(500),activity_status_value VARCHAR(500),activity_sub_status_value VARCHAR(500),hierarchy VARCHAR(500),time_generated VARCHAR(500),subscription_id VARCHAR(500),operation_name VARCHAR(500),activity_statu VARCHAR(500),activity_sub_status VARCHAR(500),category VARCHAR(500),resource_id VARCHAR(500),resource_provider VARCHAR(500),resource VARCHAR(500),type VARCHAR(500),_resource_id VARCHAR(500));")
+    cursor.execute("CREATE TABLE log_sentinal_plugin(id serial PRIMARY KEY, tenant_ids VARCHAR(500),source_system VARCHAR(500),caller_ip VARCHAR(500),category_value VARCHAR(500),correlation_id VARCHAR(500),authorization VARCHAR(500),authorization_d VARCHAR(500),claims VARCHAR(500), claims_d VARCHAR(500),level VARCHAR(500),operation_name_value VARCHAR(500),properties VARCHAR(500),properties_d VARCHAR(500),caller VARCHAR(500),event_data_id VARCHAR(500),event_sub_timestamp VARCHAR(500),http_request VARCHAR(500),operation_id VARCHAR(500),resource_group VARCHAR(500),resource_provider_value VARCHAR(500),activity_status_value VARCHAR(500),activity_sub_status_value VARCHAR(500),hierarchy VARCHAR(500),time_generated VARCHAR(500),subscription_id VARCHAR(500),operation_name VARCHAR(500),activity_status VARCHAR(500),activity_sub_status VARCHAR(500),category VARCHAR(500),resource_id VARCHAR(500),resource_provider VARCHAR(500),resource VARCHAR(500),type VARCHAR(500),_resource_id VARCHAR(500));")
 
 #Dependent function for monitoring 
 
@@ -124,6 +122,7 @@ def on_created(event):
     if trigger=="yes":
 
         token=auth()
+        #Place where the request is coming from this case API Tool
         place="clitool"
 
         # query to fetch all values in the table realted to clitoll/devcc comparison 
@@ -145,7 +144,7 @@ def on_created(event):
             q = q.strftime('%m/%d/%Y, %H:%M:%S %p')
 
             # query to fetch the logs b/w last call and current time. Current time inclusive and last call time exclusive
-            url = "https://api.loganalytics.io/v1/workspaces/b8e3db16-3424-4424-b4bf-bc030122a810/query?query=AzureActivity | where TimeGenerated > datetime(" + q1 + ") and TimeGenerated <= datetime('" + q + "') "
+            url = "https://api.loganalytics.io/v1/workspaces/26b85ef6-e144-4407-836d-284c9226b22a/query?query=AzureActivity | where TimeGenerated > datetime(" + q1 + ") and TimeGenerated <= datetime('" + q + "') "
             payload = {}
             headers = {
                 'Authorization': 'Bearer ' + token,
@@ -299,7 +298,7 @@ def insert_new_status_into_db(place,log,q,cursor):
 
 #Inserting Azure Monitor Logs into Database
 def insert_new_logs_into_logs_db(cursor,tenant_ids,source_system,caller_ip,category_value,correlation_id,authorization,authorization_d,claims,claims_d,level,operation_name_value,properties,properties_d,caller,event_data_id,event_sub_timestamp,http_request,operation_id,resource_group,resource_provider_value,activity_status_value,activity_sub_status_value,hierarchy,time_generated,subscription_id,operation_name,activity_status,activity_sub_status,category,resource_id,resource_provider,resource,type,_resource_id):
-    lengh=len(tenant_id)
+    lengh=len(tenant_ids)
     for j in range(0,lengh):
         cursor.execute("INSERT INTO log_sentinal_plugin(tenant_ids, source_system, caller_ip, category_value, correlation_id, authorization, authorization_d, claims ,claims_d, level, operation_name_value, properties, properties_d, caller, event_data_id, event_sub_timestamp, http_request, operation_id, resource_group, resource_provider_value, activity_status_value, activity_sub_status_value, hierarchy, time_generated, subscription_id, operation_name, activity_status, activity_sub_status, category, resource_id, resource_provider, resource, type, _resource_id) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);",(tenant_ids[j],source_system[j],caller_ip[j],category_value[j],correlation_id[j],authorization[j],authorization_d[j],claims[j],claims_d[j],level[j],operation_name_value[j],properties[j],properties_d[j],caller[j],event_data_id[j],event_sub_timestamp[j],http_request[j],operation_id[j],resource_group[j],resource_provider_value[j],activity_status_value[j],activity_sub_status_value[j],hierarchy[j],time_generated[j],subscription_id[j],operation_name[j],activity_status[j],activity_sub_status[j],category[j],resource_id[j],resource_provider[j],resource[j],type[j],_resource_id[j]))
         print("Inserted",cursor.rowcount,"row(s) of data.")
@@ -310,7 +309,7 @@ def insert_new_logs_into_logs_db(cursor,tenant_ids,source_system,caller_ip,categ
 def new_values(token):
     cursor,conn=cursor_initialize()
     #Fetching the last 15 mins data if table is empty
-    url = "https://api.loganalytics.io/v1/workspaces/b8e3db16-3424-4424-b4bf-bc030122a810/query?query=AzureActivity | where TimeGenerated > ago(12m)"
+    url = "https://api.loganalytics.io/v1/workspaces/26b85ef6-e144-4407-836d-284c9226b22a/query?query=AzureActivity | where TimeGenerated > ago(12m)"
     print(url)
     payload = {}
     headers = {
@@ -439,6 +438,7 @@ def new_values(token):
     
 
 def update_database(token):
+    #Place where the request is coming from this case Azure Monitoring Cycle
     place='azure'
     cursor,conn=cursor_initialize()
 
@@ -457,7 +457,7 @@ def update_database(token):
         q=datetime.utcnow()
         q = q.strftime('%m/%d/%Y, %H:%M:%S %p')
         #query to fetch the logs b/w last call and current time. Current time inclusive and last call time exclusive
-        url = "https://api.loganalytics.io/v1/workspaces/b8e3db16-3424-4424-b4bf-bc030122a810/query?query=AzureActivity | where TimeGenerated > datetime('" + q1 + "') and TimeGenerated <= datetime('" + q + "')"
+        url = "https://api.loganalytics.io/v1/workspaces/26b85ef6-e144-4407-836d-284c9226b22a/query?query=AzureActivity | where TimeGenerated > datetime('" + q1 + "') and TimeGenerated <= datetime('" + q + "')"
         print(url)
         payload = {}
         headers = {
