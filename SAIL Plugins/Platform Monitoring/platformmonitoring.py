@@ -8,10 +8,10 @@ from mysql.connector import errorcode
 
 import requests
 import json
-#import pandas as pd
+import pandas as pd
 from datetime import datetime,date
 import time
-#import threading
+import threading
 #import win32com.client
 import os
 
@@ -25,7 +25,7 @@ my_observer = Observer()
 
 #Path to monitor for json files please change this path to your monitoring path
 
-path = "C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\PLATFORM MONITORING\Monitor"
+path = "/home/sailadmin/Platform_Monitoring_Plugin"
 
 patterns = ["*.json"]
 
@@ -45,7 +45,7 @@ config = {
   'password':'123@hanu123@HANU',
   'database':'sail_test_db',
   'client_flags': [mysql.connector.ClientFlag.SSL],
-  'ssl_ca': 'C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\DigiCertAssuredIDRootCA.crt.pem'
+  'ssl_ca': '/home/sailadmin/Platform_Monitoring_Plugin/Sql_Certificate/DigiCertAssuredIDRootCA.crt (1).pem'
 }
 
 def cursor_intialize():
@@ -132,10 +132,12 @@ def auth():
     except:
         print("Token can't be generated")
 
+
+#Fetching resource ID of the API VM from its GUID
 def fetch_vm_resid(guid):
     cursor,conn=cursor_intialize()
     try:
-        # query to fetch all rows related to a single VM based on its resourceID
+        # query to fetch all rows related to a single VM based on its GUID
         query="select * from platform_provisioning_plugin where guid= %s"
         cursor.execute(query,(guid,))
         rows = cursor.fetchall()
@@ -183,19 +185,23 @@ def list_of_all_VM(token):
 
 # Fetching the current status of the VM
 def fetch_vm_status_for_azure(ID,token):
-    url = "https://management.azure.com"+ID+"/InstanceView?api-version=2022-03-01"
-    payload = {}
-    headers = {
-        'Authorization': 'Bearer ' + token,
-        }
-    response = requests.request("GET", url, headers=headers, data=payload)
-    result = response.text
-    jsondata = json.loads(result)
-    values = jsondata
-    now_status=values["statuses"][1]['code']
-    now_status=now_status.split('/')
-    now_status=now_status[-1]
-    compare_azure_with_db(ID,now_status)
+    try:
+        url = "https://management.azure.com"+ID+"/InstanceView?api-version=2022-03-01"
+        payload = {}
+        headers = {
+            'Authorization': 'Bearer ' + token,
+            }
+        response = requests.request("GET", url, headers=headers, data=payload)
+        result = response.text
+        jsondata = json.loads(result)
+        values = jsondata
+        now_status=values["statuses"][1]['code']
+        now_status=now_status.split('/')
+        now_status=now_status[-1]
+        compare_azure_with_db(ID,now_status)
+    except:
+        print("The Status can't be fetched from Azure")
+    
 
 #Comparing data b/w azure and API call from DEVCC
 def fetch_vm_status_for_API(ID,status,guid):
@@ -216,7 +222,7 @@ def fetch_vm_status_for_API(ID,status,guid):
     except:
         vm_name=ID.split('/')
         vm_name=vm_name[-1]
-        print("There is NO such VM "+vm_name)
+        print("There is No such API VM "+vm_name+" registered in the database")
         return
     print("The existing status of the server is "+ now_status)
     if status != now_status:
@@ -245,7 +251,7 @@ def compare_azure_with_db(vm_id,new_vm_status):
     except:
         vm_name=vm_id.split('/')
         vm_name=vm_name[-1]
-        print("There is no VM "+vm_name+" registered in the database")
+        print("There is No such API VM "+vm_name+" registered in the database")
         cursor_close(cursor,conn)
         return
     print("The previous status of the server is "+ row[4])
@@ -330,6 +336,3 @@ if __name__ == "__main__":
 
         my_observer.join()
     
-
-
-
