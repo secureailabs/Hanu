@@ -12,7 +12,7 @@ import json
 from datetime import datetime,date
 import time
 import threading
-import win32com.client
+#import win32com.client
 import os
 
 #Initializing Service Principal
@@ -24,7 +24,7 @@ tenant_id="3e74e5ef-7e6a-4cf0-8573-680ca49b64d8"
 my_observer = Observer()
 
 #Path to monitor for json files please change this path to your monitoring path
-path = "C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\SCN Monitoring\Monitor"
+path = "/home/sailadmin/SCN_Monitoring_Plugin/Monitor"
 
 patterns = ["*.json"]
 
@@ -44,9 +44,8 @@ config = {
   'password':'123@hanu123@HANU',
   'database':'sail_test_db',
   'client_flags': [mysql.connector.ClientFlag.SSL],
-  'ssl_ca': 'C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\DigiCertAssuredIDRootCA.crt.pem'
+  'ssl_ca': '/home/sailadmin/SCN_Monitoring_Plugin/Sql_Certificate/DigiCertAssuredIDRootCA.crt (1).pem'
 }
-
 def cursor_intialize():
 # Construct connection string and intialize database pointer
 
@@ -131,10 +130,12 @@ def auth():
     except:
         print("Token can't be generated")
 
+
+#Fetching resource ID of the SCN VM from its GUID
 def fetch_vm_resid(guid):
     cursor,conn=cursor_intialize()
     try:
-        # query to fetch all rows related to a single VM based on its resourceID
+        # query to fetch all rows related to a single VM based on its GUID
         query="select * from scn_provisioning_plugin where guid= %s"
         cursor.execute(query,(guid,))
         rows = cursor.fetchall()
@@ -144,7 +145,6 @@ def fetch_vm_resid(guid):
         cursor_close(cursor,conn)
         return
     res_id=row[3]
-    print(res_id)
     cursor_close(cursor,conn)
     return res_id
 
@@ -216,7 +216,7 @@ def fetch_vm_status_for_API(ID,status,guid):
     except:
         vm_name=ID.split('/')
         vm_name=vm_name[-1]
-        print("There is NO such VM "+vm_name)
+        print("There is No such SCN VM "+vm_name+" registered in the database")
         return
     print("The existing status of the server is "+ now_status)
     if status != now_status:
@@ -247,7 +247,7 @@ def compare_azure_with_db(vm_id,new_vm_status):
     except:
         vm_name=vm_id.split('/')
         vm_name=vm_name[-1]
-        print("There is no VM "+vm_name+" registered in the database")
+        print("There is No such SCN VM "+vm_name+" registered in the database")
         cursor_close(cursor,conn)
         return
 
@@ -335,7 +335,4 @@ if __name__ == "__main__":
         my_observer.stop()
 
         my_observer.join()
-    
-
-
-
+   
