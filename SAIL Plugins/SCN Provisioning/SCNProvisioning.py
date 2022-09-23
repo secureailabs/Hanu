@@ -1,4 +1,4 @@
-from shutil import get_archive_formats
+from distutils.log import error
 import time
 
 from watchdog.observers import Observer
@@ -34,20 +34,12 @@ tenant_id="3e74e5ef-7e6a-4cf0-8573-680ca49b64d8"
 #Folder Monitoring Thread
 my_observer = Observer()
 
-#Path to monitor for json files please change this path to your monitoring path
-
-path = "C:\\Users\PriyanshuKumar\OneDrive - HANU SOFTWARE SOLUTIONS INDIA PRIVATE LIMITED\MY Codes\Python Secure AI\SCN Provisioning\Monitor"
-#"/home/sailadmin/sail_plugin/SCNProvisioning/Monitor" 
-
-
+#Path to monitor for json file
+path = "/home/sailadmin/SCN_Provisioning_Plugin/Monitor"
 patterns = ["*.json"]
-
 ignore_patterns = None
-
 ignore_directories = False
-
 case_sensitive = True
-
 my_event_handler = PatternMatchingEventHandler(patterns, ignore_patterns, ignore_directories, case_sensitive)
 
 #Authentication token for azure this token will be used by rest API's to read and write to azure
@@ -73,15 +65,13 @@ def auth():
         print("Token can't be generated")
 
 #Dependent function for monitoring 
-
 def key_num(d):
 
    return sum(not isinstance(b, dict) or 1 + key_num(b) for b in d.values())
 
 # Monitoring Function
-
 def on_created(event):
-    print('File Encountered')
+    print('Json File Encountered in the specified path')
     #Creating a lock file until the contents of json file is fully written and waiting for the lock file to be deleted to proceed
     lock_file = event.src_path + ".lock"
 
@@ -109,107 +99,149 @@ def on_created(event):
     jsondata=open(event.src_path,"r")
     data=json.load(jsondata)
 
-    try:
-        #Initializing the variables from input json file
-        ROI=data['InitializationParameters']['ResearchOrganizationIdentifier']
-        DOOI=data['InitializationParameters']['DataOwnerOrganizationIdentifier']
-        DCI=data['InitializationParameters']['DigitalContractTdentifier']
-        DI=data['InitializationParameters']['DatasetIdentifier']
-        TKAC="xyzxyzxyxxyxzzzyxzy"
-        EAESK="adfgjkloiuytdfrjvft"
-        RORP=data['InitializationParameters']['ResearchOrganizationRsaAuditPublicKey']
-        DOORP=data['InitializationParameters']['DataOwnerOrganizationRsaAuditPublicKey']
-        AORP=data['InitializationParameters']['AuditorOrganizationRsaAuditPublicKey']
-        SORP=data['InitializationParameters']['SailOrganizationRsaAuditPublicKey']
-        EADEK=data['InitializationParameters']['EncryptedAesDataExchangeKey']
-        IPSAIL="10.10.10.10"
-        ECB=blob_fetch()
-        token=auth()
-        guid=fetch_guid()
-        vm_name=data['vm_name']
-        rg_name=data['rg_name']
-        nsg_name=data['nsg_name']
-        vnet_name=data['vnet_name']
-        vm_size=data['Request']['VirtualMachineType']
-        loc=data['Request']['Region'] 
-        insert_db(vm_name,guid,guid,"Provisioning")
-        status=res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid)
-        vm_status=fetch_vm_status_from_azure(status[0],token)
-        vm_name=status[0].split('/')
-        vm_name=vm_name[-1]
-        if status[1]!="OK":
-            now = datetime.now()
-            now=str(now)
-            insert_db(vm_name,guid,guid,"Not Provisioned")
-        insert_db(vm_name,guid,status[0],vm_status)
-        json_write(status[0],ROI,DOOI,DCI,DI,TKAC,EAESK,ECB,RORP,DOORP,AORP,SORP,EADEK,IPSAIL)
-
-    except: 
-        print("Missing Json Values")
-    #print(vm_name)
-
-    #print(f"hey, {event.src_path} ")
-
-# Adding Public IP To Firewall Policy
-def add_fw_rule(pip,guid,destination_vnet):
-    GROUP_NAME = "rg-sail-wus-hub-001"
-    subscription_id = "6e7f356c-6059-4799-b83a-c4744e4a7c2e"
-    credential = ClientSecretCredential(tenant_id,client_id,client_secret)
-
-    resource_client = ResourceManagementClient(credential, subscription_id)
-
-    network_client = NetworkManagementClient(credential, subscription_id)
+    #Initializing the variables from input json file
+    ROI=data['InitializationParameters']['ResearchOrganizationIdentifier']
+    DOOI=data['InitializationParameters']['DataOwnerOrganizationIdentifier']
+    DCI=data['InitializationParameters']['DigitalContractTdentifier']
+    DI=data['InitializationParameters']['DatasetIdentifier']
+    TKAC="xyzxyzxyxxyxzzzyxzy"
+    EAESK="adfgjkloiuytdfrjvft"
+    RORP=data['InitializationParameters']['ResearchOrganizationRsaAuditPublicKey']
+    DOORP=data['InitializationParameters']['DataOwnerOrganizationRsaAuditPublicKey']
+    AORP=data['InitializationParameters']['AuditorOrganizationRsaAuditPublicKey']
+    SORP=data['InitializationParameters']['SailOrganizationRsaAuditPublicKey']
+    EADEK=data['InitializationParameters']['EncryptedAesDataExchangeKey']
+    IPSAIL="10.10.10.10"
+    ECB=blob_fetch()
+    token=auth()
+    guid=fetch_guid()
+    vm_name=data['vm_name']
+    rg_name=data['rg_name']
+    nsg_name=data['nsg_name']
+    vnet_name=data['vnet_name']
+    vm_size=data['Request']['VirtualMachineType']
+    loc=data['Request']['Region'] 
+    insert_db(vm_name,guid,guid,"Provisioning")
+    status=scn_res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid)
+    vm_status=fetch_vm_status_from_azure(status[0],token)
+    vm_name=status[0].split('/')
+    vm_name=vm_name[-1]
+    if status[1]!="OK":
+        now = datetime.now()
+        now=str(now)
+        insert_db(vm_name,guid,guid,"Not Provisioned")
+    insert_db(vm_name,guid,status[0],vm_status)
+    json_write(status[0],ROI,DOOI,DCI,DI,TKAC,EAESK,ECB,RORP,DOORP,AORP,SORP,EADEK,IPSAIL)
 
 
-    def write_json(new_data, filename='fw.json'):
-        file_data=""
-        with open(filename,'r+') as file:
-            file_data = json.load(file)
-            #print(file_data["rules"][0]["rule_conditions"])
-            file_data["rules"][0]["rule_conditions"].append(new_data)
-            file.seek(0)
-            json.dump(file_data, file, indent = 4)
-        return file_data
-
-    # python object to be appended
-    y = {
-            "rule_condition_type": "NetworkRuleCondition",
-            "name": guid,
-            "sourceAddresses": [
-                pip
-            ],
-            "sourcePorts":[
-                "22"
-            ],
-            "destinationAddresses": [
-                destination_vnet
-            ],
-            "ipProtocols": [
-                "TCP"
-            ],
-            "destinationPorts": [
-                "22"
-            ]
+#Adding New PIP to Azure Firewall
+def add_pip_to_fw(guid,pip_id):
+    token=auth()
+    y={
+        "name": guid,
+        "type": "Microsoft.Network/azureFirewalls/azureFirewallIpConfigurations",
+        "properties": {
+            "publicIPAddress": {
+                "id": pip_id
+            }
         }
-     
-    policy_rule=write_json(y)
+    }
+    try:
+        url = "https://management.azure.com//subscriptions/6e7f356c-6059-4799-b83a-c4744e4a7c2e/resourceGroups/rg-sail-wus-hub-001/providers/Microsoft.Network/azureFirewalls/afw-sail-wus?api-version=2022-01-01"
+        headers = {
+            'Authorization': 'Bearer ' + token,
+            'Accept' : 'application/json', 
+            'Content-Type' : 'application/json'
+            }
+        response = requests.request("GET", url, headers=headers)
+        result = response.text
+        jsondata = json.loads(result)
+        jsondata["properties"]["ipConfigurations"].append(y)
+        with open('add_pip_to_hubfw.json', 'w+') as json_file:
+            json.dump(jsondata, json_file) 
+        json_file.close()
+        with open('add_pip_to_hubfw.json', 'r+') as json_file:
+            data = json.load(json_file)
+        json_file.close()             
+    except error:
+        print(error)
+    try:
+        url = "https://management.azure.com//subscriptions/6e7f356c-6059-4799-b83a-c4744e4a7c2e/resourceGroups/rg-sail-wus-hub-001/providers/Microsoft.Network/azureFirewalls/afw-sail-wus?api-version=2022-01-01"
+        headers = {
+            'Authorization': 'Bearer ' + token,
+            'Accept' : 'application/json', 
+            'Content-Type' : 'application/json'
+            }
+        response = requests.request("PUT", url, headers=headers, data=json.dumps(data))
+        result = response.text
+        jsondata = json.loads(result)
+        print("Public Ip Added Successfully To Azure Firewall")
+    except error:
+        print(error)
 
-    FIREWALL_POLICY_RULE_GROUP = "SCNNetworkRuleCollectionGroup"
-    FIREWALL_POLICY = "afwpol-sail-wus-001"
 
-
-    firewall_policy_rule_group = network_client.firewall_policy_rule_groups.begin_create_or_update(GROUP_NAME,
-        FIREWALL_POLICY,
-        FIREWALL_POLICY_RULE_GROUP, policy_rule
-    )
-    print("Added the Firewall policy")
-
+# Adding Newly created SCN Dnat rule to firewall policy
+def add_scn_dnat_fw_rule(guid,p_ip,pvt_ip):
+    token=auth()
+    y= {
+                    "ruleType": "NatRule",
+                    "name": guid,
+                    "translatedAddress": pvt_ip,
+                    "translatedPort": "22",
+                    "ipProtocols": [
+                        "TCP"
+                    ],
+                    "sourceAddresses": [
+                        "*"
+                    ],
+                    "sourceIpGroups": [],
+                    "destinationAddresses": [
+                        p_ip
+                    ],
+                    "destinationPorts": [
+                        "22"
+                    ]
+                }
+    try:
+        url = "https://management.azure.com//subscriptions/6e7f356c-6059-4799-b83a-c4744e4a7c2e/resourceGroups/rg-sail-wus-hub-001/providers/Microsoft.Network/firewallPolicies/afwpol-sail-wus-001/ruleCollectionGroups/SCNRuleCollectionGroup?api-version=2022-01-01"
+        headers = {
+            'Authorization': 'Bearer ' + token,
+            'Accept' : 'application/json', 
+            'Content-Type' : 'application/json'
+            }
+        response = requests.request("GET", url, headers=headers)
+        result = response.text
+        jsondata = json.loads(result)
+        jsondata["properties"]["ruleCollections"][0]["rules"].append(y)
+        with open('add_scnnatrule_to_hubfw.json', 'w+') as json_file:
+            json.dump(jsondata, json_file) 
+        json_file.close()
+        with open('add_scnnatrule_to_hubfw.json', 'r+') as json_file:
+            data = json.load(json_file)
+        json_file.close()
+    except error:
+        print(error)
+    try:
+        url = "https://management.azure.com//subscriptions/6e7f356c-6059-4799-b83a-c4744e4a7c2e/resourceGroups/rg-sail-wus-hub-001/providers/Microsoft.Network/firewallPolicies/afwpol-sail-wus-001/ruleCollectionGroups/SCNRuleCollectionGroup?api-version=2022-01-01"
+        headers = {
+            'Authorization': 'Bearer ' + token,
+            'Accept' : 'application/json', 
+            'Content-Type' : 'application/json'
+            }
+        response = requests.request("PUT", url, headers=headers, data=json.dumps(data))
+        result = response.text
+        jsondata = json.loads(result)
+        print("Added Dnat Rule for SCN Successfully")
+    except error:
+        print(error)
+    
+#Fetching Unique ID for every new SCN Provisioned
 def fetch_guid():
     import uuid 
     guid=uuid.uuid4()
     return str(guid)
 
-# Fetching VM status from azure
+# To get the provisioning status of new API Plugin from azure 
 def fetch_vm_status_from_azure(ID,token):
     url = "https://management.azure.com"+ID+"/InstanceView?api-version=2022-03-01"
     payload = {}
@@ -226,212 +258,254 @@ def fetch_vm_status_from_azure(ID,token):
     print(now_status)
     return now_status
 
-# Creating VM and dependent resources in azure 
+# Creating SCN Plugin and dependent resources in azure 
 
-def res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
-    try:
+def scn_res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
+        
+    credential = ClientSecretCredential(tenant_id,client_id,client_secret)
 
-        credential = ClientSecretCredential(tenant_id,client_id,client_secret)
-
-    # Retrieve subscription ID from environment variable.
-        subscription_id = "b7a46052-b7b1-433e-9147-56efbfe28ac5"
+# Retrieve subscription ID from environment variable.
+    subscription_id = "ba383264-b9d6-4dba-b71f-58b3755382d8"
 
 
-        # 1 - create a resource group
+    # 1 - create a resource group
 
-        # Get the management object for resources, this uses the credentials from the CLI login.
-        resource_client = ResourceManagementClient(credential, subscription_id)
+    # Get the management object for resources, this uses the credentials from the CLI login.
+    resource_client = ResourceManagementClient(credential, subscription_id)
 
-        # Set constants we need in multiple places.  You can change these values however you want.
-        rg_name=rg_name+"-sail-wus-"+guid
-        RESOURCE_GROUP_NAME = rg_name
-        LOCATION = loc
+    # Set constants we need in multiple places.  You can change these values however you want.
+    rg_name=rg_name+"-sail-wus-"+guid
+    RESOURCE_GROUP_NAME = rg_name
+    LOCATION = loc
 
-        #Checking if RG name is already present or not in that location
-        rg_list = resource_client.resource_groups.list()
+    #Checking if RG name is already present or not in that location
+    rg_list = resource_client.resource_groups.list()
 
-        for rgs in list(rg_list):
-            if rgs.name==RESOURCE_GROUP_NAME and rgs.location==LOCATION:
-                return "RG with this name already exist in the specified lcoation "
-        # create the resource group.
-        rg_result = resource_client.resource_groups.create_or_update(RESOURCE_GROUP_NAME,
-            {
-                "location": LOCATION
+    for rgs in list(rg_list):
+        if rgs.name==RESOURCE_GROUP_NAME and rgs.location==LOCATION:
+            return "RG with this name already exist in the specified lcoation "
+    # create the resource group.
+    rg_result = resource_client.resource_groups.create_or_update(RESOURCE_GROUP_NAME,
+        {
+            "location": LOCATION
+        }
+    )
+
+    print(f"Provisioned resource group {rg_result.name} in the {rg_result.location} region")
+
+
+    # 2 - provision the virtual network
+
+
+    # Network and IP address names
+    VNET_NAME = vnet_name+"-sail-wus-"+guid
+    SUBNET_NAME = vnet_name +"-SNET01"
+    IP_NAME = "IP01"+"-sail-wus-"+guid
+    IP_CONFIG_NAME = "IPCONFIG01"+"-sail-wus-"+guid
+    NIC_NAME = "NIC-"+"SCN"+"-sail-wus-"+guid
+
+    # Get the management object for the network
+    network_client = NetworkManagementClient(credential, subscription_id)
+
+
+    #Checking if VNet is already present in that Resource Group
+    net_list=network_client.virtual_networks.list(RESOURCE_GROUP_NAME)
+
+    for netw in list(net_list):
+        if netw.name==VNET_NAME:
+            return "VNET with this name is already present in the specified Resource Group"
+
+    # Create the virtual network 
+    poller = network_client.virtual_networks.begin_create_or_update(RESOURCE_GROUP_NAME,
+        VNET_NAME,
+        {
+            "location": LOCATION,
+            "address_space": {
+                "address_prefixes": ["172.23.0.0/29"]
             }
-        )
+        }
+    )
 
-        print(f"Provisioned resource group {rg_result.name} in the {rg_result.location} region")
-
-
-        # 2 - provision the virtual network
-
-
-        # Network and IP address names
-        VNET_NAME = vnet_name+"-sail-wus-"+guid
-        SUBNET_NAME = vnet_name +"-SNET01"
-        IP_NAME = vm_name+"-IP01"+"-sail-wus"
-        IP_CONFIG_NAME = vm_name+ "-IPCONFIG01"+"-sail-wus"
-        NIC_NAME = vm_name+"-NIC01"+"-sail-wus"
-
-        # Get the management object for the network
-        network_client = NetworkManagementClient(credential, subscription_id)
+    vnet_result = poller.result()
+    print(f"Provisioned virtual network {vnet_result.name} with address prefixes {vnet_result.address_space.address_prefixes}")
 
 
-        #Checking if VNet is already present in that Resource Group
-        net_list=network_client.virtual_networks.list(RESOURCE_GROUP_NAME)
 
-        for netw in list(net_list):
-            if netw.name==VNET_NAME:
-                return "VNET with this name is already present in the specified Resource Group"
+    # 3 - Create the subnet
+    subres3 = SubResource(id="/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/rg-sail-wus-prd-vnet-01/providers/Microsoft.Network/routeTables/rt-sail-wus-prd-01")
+    SUBNET_DATA=Subnet(address_prefix= "172.23.0.0/29", route_table=subres3)
+    poller = network_client.subnets.begin_create_or_update(RESOURCE_GROUP_NAME, 
+        VNET_NAME, SUBNET_NAME,SUBNET_DATA
+    )
+    subnet_result = poller.result()
 
-        # Create the virtual network 
-        poller = network_client.virtual_networks.begin_create_or_update(RESOURCE_GROUP_NAME,
-            VNET_NAME,
-            {
-                "location": LOCATION,
-                "address_space": {
-                    "address_prefixes": ["10.16.0.0/16"]
-                }
-            }
-        )
+    print(f"Provisioned virtual subnet {subnet_result.name} with address prefix {subnet_result.address_prefix}")
 
-        vnet_result = poller.result()
-        print(f"Provisioned virtual network {vnet_result.name} with address prefixes {vnet_result.address_space.address_prefixes}")
 
+    # 3.1 - Peering Virtual Networks Plugin VNET to SCN VNET
+    peer_vnet_name=vnet_name+"-sail-wus"
+    prd_subscription_id= "ba383264-b9d6-4dba-b71f-58b3755382d8"
+    prd_network_client = NetworkManagementClient(credential, prd_subscription_id)
+    prd_resource_client = ResourceManagementClient(credential, prd_subscription_id)
+    resource_client.providers.register('Microsoft.Network')
+    prd_resource_client.providers.register('Microsoft.Network')
+
+    res1 = resource_client.resources.get(RESOURCE_GROUP_NAME, "Microsoft.Network", "", "virtualNetworks", VNET_NAME, "2022-01-01")
+    res2 = prd_resource_client.resources.get("rg-sail-wus-prd-vnet-01", "Microsoft.Network", "", "virtualNetworks", "vnet-sail-wus-prd-01", "2022-01-01")
+
+    subres1 = SubResource(id=res1.id)
+    subres2 = SubResource(id=res2.id)
+
+    peering_params1 =  VirtualNetworkPeering(allow_virtual_network_access=True, allow_forwarded_traffic=True ,allow_gateway_transit=False,remote_virtual_network=subres1)
+    peering_params2 =  VirtualNetworkPeering(allow_virtual_network_access=True, allow_forwarded_traffic=True, use_remote_gateways=False,remote_virtual_network=subres2)
+
+    peer_name_1="vnet-sail-wus-prd-01-To-"+peer_vnet_name
+    peer_name_2=peer_vnet_name+"-To-vnet-sail-wus-prd-01"
+    poller2 = network_client.virtual_network_peerings.begin_create_or_update(RESOURCE_GROUP_NAME, VNET_NAME, peer_name_2, peering_params2)
+    poller1 = prd_network_client.virtual_network_peerings.begin_create_or_update("rg-sail-wus-prd-vnet-01", "vnet-sail-wus-prd-01", peer_name_1, peering_params1)
+
+    peer_result1=poller1.result()
+    peer_result2=poller2.result()
     
 
-        # 3 - Create the subnet
-        subres3 = SubResource(id="/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/resourceGroups/Payload-Route-Dev-RG/providers/Microsoft.Network/routeTables/SCN-DEV-ROUTE")
-        SUBNET_DATA=Subnet(address_prefix= "10.16.0.0/24", route_table=subres3)
-        poller = network_client.subnets.begin_create_or_update(RESOURCE_GROUP_NAME, 
-            VNET_NAME, SUBNET_NAME,SUBNET_DATA
-        )
-        subnet_result = poller.result()
+    print(f"Created virtual network peering b/w Plugin VNET and SCN VNET with names {peer_result1.name} and {peer_result2.name}")
 
-        print(f"Provisioned virtual subnet {subnet_result.name} with address prefix {subnet_result.address_prefix}")
+    # 3.2 - Peering Virtual Networks SAIL Hub and SCN VNET
+    peer_vnet_name=vnet_name+"-sail-wus"
+    hub_subscription_id= "6e7f356c-6059-4799-b83a-c4744e4a7c2e"
+    hub_network_client = NetworkManagementClient(credential, hub_subscription_id)
+    hub_resource_client = ResourceManagementClient(credential, hub_subscription_id)
+    resource_client.providers.register('Microsoft.Network')
+    hub_resource_client.providers.register('Microsoft.Network')
 
+    res1 = resource_client.resources.get(RESOURCE_GROUP_NAME, "Microsoft.Network", "", "virtualNetworks", VNET_NAME, "2022-01-01")
+    res2 = hub_resource_client.resources.get("rg-sail-wus-hub-001", "Microsoft.Network", "", "virtualNetworks", "vnet-sail-wus-hub-001", "2022-01-01")
 
-        #Peering Virtual Networks
-        peer_vnet_name=vnet_name+"-sail-wus"
-        hub_subscription_id= "6e7f356c-6059-4799-b83a-c4744e4a7c2e"
-        hub_network_client = NetworkManagementClient(credential, hub_subscription_id)
-        hub_resource_client = ResourceManagementClient(credential, hub_subscription_id)
-        resource_client.providers.register('Microsoft.Network')
-        hub_resource_client.providers.register('Microsoft.Network')
+    subres1 = SubResource(id=res1.id)
+    subres2 = SubResource(id=res2.id)
 
-        res1 = resource_client.resources.get(RESOURCE_GROUP_NAME, "Microsoft.Network", "", "virtualNetworks", VNET_NAME, "2022-01-01")
-        res2 = hub_resource_client.resources.get("rg-sail-wus-hub-001", "Microsoft.Network", "", "virtualNetworks", "vnet-sail-wus-hub-001", "2022-01-01")
+    peering_params1 =  VirtualNetworkPeering(allow_virtual_network_access=True, allow_forwarded_traffic=True ,allow_gateway_transit=True,remote_virtual_network=subres1)
+    peering_params2 =  VirtualNetworkPeering(allow_virtual_network_access=True, allow_forwarded_traffic=True, use_remote_gateways=True,remote_virtual_network=subres2)
 
-        subres1 = SubResource(id=res1.id)
-        subres2 = SubResource(id=res2.id)
+    peer_name_1="vnet-sail-wus-hub-001-To-"+peer_vnet_name
+    peer_name_2=peer_vnet_name+"-To-vnet-sail-wus-hub-001"
+    poller2 = network_client.virtual_network_peerings.begin_create_or_update(RESOURCE_GROUP_NAME, VNET_NAME, peer_name_2, peering_params2)
+    poller1 = hub_network_client.virtual_network_peerings.begin_create_or_update("rg-sail-wus-hub-001", "vnet-sail-wus-hub-001", peer_name_1, peering_params1)
 
-        peering_params1 =  VirtualNetworkPeering(allow_virtual_network_access=True, allow_forwarded_traffic=True ,allow_gateway_transit=True,remote_virtual_network=subres1)
-        peering_params2 =  VirtualNetworkPeering(allow_virtual_network_access=True, allow_forwarded_traffic=True, use_remote_gateways=True,remote_virtual_network=subres2)
+    peer_result1=poller1.result()
+    peer_result2=poller2.result()
+    
 
-        peer_name_1="vnet-sail-wus-hub-001-To-"+peer_vnet_name
-        peer_name_2=peer_vnet_name+"-To-vnet-sail-wus-hub-001"
-        poller2 = network_client.virtual_network_peerings.begin_create_or_update(RESOURCE_GROUP_NAME, VNET_NAME, peer_name_2, peering_params2)
-        poller1 = hub_network_client.virtual_network_peerings.begin_create_or_update("rg-sail-wus-hub-001", "vnet-sail-wus-hub-001", peer_name_1, peering_params1)
+    print(f"Created virtual network peering b/w Hub and SCN VNET with names {peer_result1.name} and {peer_result2.name}")
 
-        peer_result1=poller1.result()
-        peer_result2=poller2.result()
+    hub_network_client = NetworkManagementClient(credential, hub_subscription_id)
+    # 4 - Create the IP address
+    poller = hub_network_client.public_ip_addresses.begin_create_or_update("rg-sail-wus-hub-001",
+        IP_NAME,
+        {
+            "location": LOCATION,
+            "sku": { "name": "Standard" },
+            "public_ip_allocation_method": "Static",
+            "public_ip_address_version" : "IPV4"
+        }
+    )
+
+    ip_address_result = poller.result()
+
+    print(f"Provisioned public IP address {ip_address_result.name} with address {ip_address_result.ip_address} ")
+    
+    #Adding Public IP for SCN in Firewall.
+    add_pip_to_fw(guid,ip_address_result.id)
+
+    # 5 - Creating the Network Security Group with default values
+    nsg_name="NSG"+"-"+nsg_name+"-sail-wus-"+guid
+    
+    nsg_params = NetworkSecurityGroup(id=nsg_name,location=LOCATION)
+    nsg = network_client.network_security_groups.begin_create_or_update(RESOURCE_GROUP_NAME, nsg_name, parameters=nsg_params)
+    nsg=nsg.result()
+    print(f"Provisioned Network Security Group with name {nsg.name}")
+
+    # 5.1 - Create the network interface client
+    poller = network_client.network_interfaces.begin_create_or_update(RESOURCE_GROUP_NAME,
+        NIC_NAME, 
+        {
+            "location": LOCATION,
+            "ip_configurations": [ {
+                "name": IP_CONFIG_NAME,
+                "subnet": { "id": subnet_result.id }
+            }],
+            "network_security_group": {
+            "id": nsg.id
+        }
+
+        }
         
+    )
 
-        print(f"Created virtual network peering b/w Hub and SCN VNETS with names {peer_result1.name} and {peer_result2.name}")
+    nic_result = poller.result()
+    print(f"Provisioned network interface client {nic_result.name}")
 
-        # 4 - Create the IP address
-        poller = network_client.public_ip_addresses.begin_create_or_update(RESOURCE_GROUP_NAME,
-            IP_NAME,
-            {
-                "location": LOCATION,
-                "sku": { "name": "Standard" },
-                "public_ip_allocation_method": "Static",
-                "public_ip_address_version" : "IPV4"
+    # 5.2 -Fetching the new Private IP of the server
+    poller = network_client.network_interface_ip_configurations.get(RESOURCE_GROUP_NAME,
+        NIC_NAME,IP_CONFIG_NAME
+    )
+    pvt_ip_nic_result = poller
+    pvt_ip = pvt_ip_nic_result.private_ip_address
+
+    print(f"Private IP of the Server is {pvt_ip}")    
+
+    # 6 - Create the virtual machine
+
+    # Get the management object for virtual machines
+    compute_client = ComputeManagementClient(credential, subscription_id)
+
+    VM_NAME = vm_name+"-sail-wus-"+guid
+    USERNAME = "pythonazureuser"
+    PASSWORD = "ChangeM3N0w!"
+
+    print(f"Provisioning virtual machine {VM_NAME}; this operation might take a few minutes.")
+
+    # Create the VM (Ubuntu 18.04 VM)
+    # on a Standard DS1 v2 plan with a public IP address and a default virtual network/subnet.
+
+    poller = compute_client.virtual_machines.begin_create_or_update(RESOURCE_GROUP_NAME, VM_NAME,
+        {
+            "location": LOCATION,
+            "storage_profile": {
+                'image_reference': {
+                'id' : '/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/InitializerImageStorage-WUS-Rg/providers/Microsoft.Compute/images/securecomputationnode'
             }
-        )
-
-        ip_address_result = poller.result()
-
-        print(f"Provisioned public IP address {ip_address_result.name} with address {ip_address_result.ip_address}")
-        # Creating the Network Security Group with default values
-        nsg_name=vm_name+"-"+nsg_name+"-sail-wus"
-        
-        nsg_params = NetworkSecurityGroup(id=nsg_name,location=LOCATION)
-        nsg = network_client.network_security_groups.begin_create_or_update(RESOURCE_GROUP_NAME, nsg_name, parameters=nsg_params)
-        nsg=nsg.result()
-
-        # 5 - Create the network interface client
-        poller = network_client.network_interfaces.begin_create_or_update(RESOURCE_GROUP_NAME,
-            NIC_NAME, 
-            {
-                "location": LOCATION,
-                "ip_configurations": [ {
-                    "name": IP_CONFIG_NAME,
-                    "subnet": { "id": subnet_result.id },
-                    "public_ip_address": {"id": ip_address_result.id }
-                }],
-                "network_security_group": {
-                "id": nsg.id
+            },
+            "hardware_profile": {
+                "vm_size": vm_size
+            },
+            "os_profile": {
+                "computer_name": VM_NAME,
+                "admin_username": USERNAME,
+                "admin_password": PASSWORD
+            },
+            "network_profile": {
+                "network_interfaces": [{
+                    "id": nic_result.id,
+                }]
             }
+        }
+    )
 
-            }
-            
-        )
+    vm_result = poller.result()
+    vm_id=vm_result.id
 
-        nic_result = poller.result()
+    print(f"Provisioned virtual machine {vm_result.name}")
 
-        print(f"Provisioned network interface client {nic_result.name}")
+    #Adding DNAT rule for SCN in Firewall
+    add_scn_dnat_fw_rule(guid,ip_address_result.ip_address,pvt_ip)
+    # Adding ip to DB
+    print("--------------------------------------------------------------------------")
+    print("Insert Guid and IP to DataBase")
+    insert_db_guid(guid,ip_address_result.ip_address)
+    print("--------------------------------------------------------------------------")
+    return [vm_id,"OK"]
 
-        #Adding PIP in FW Rule
-
-        add_fw_rule(ip_address_result.ip_address,guid,str(subnet_result.address_prefix))
-
-        # 6 - Create the virtual machine
-
-        # Get the management object for virtual machines
-        compute_client = ComputeManagementClient(credential, subscription_id)
-
-        VM_NAME = vm_name+"-sail-wus-"+guid
-        USERNAME = "pythonazureuser"
-        PASSWORD = "ChangeM3N0w!"
-
-        print(f"Provisioning virtual machine {VM_NAME}; this operation might take a few minutes.")
-
-        # Create the VM (Ubuntu 18.04 VM)
-        # on a Standard DS1 v2 plan with a public IP address and a default virtual network/subnet.
-
-        poller = compute_client.virtual_machines.begin_create_or_update(RESOURCE_GROUP_NAME, VM_NAME,
-            {
-                "location": LOCATION,
-                "storage_profile": {
-                    'image_reference': {
-                    'id' : '/subscriptions/b7a46052-b7b1-433e-9147-56efbfe28ac5/resourceGroups/InitializerImageStorage-WUS-Rg/providers/Microsoft.Compute/images/securecomputationnode'
-                }
-                },
-                "hardware_profile": {
-                    "vm_size": vm_size
-                },
-                "os_profile": {
-                    "computer_name": VM_NAME,
-                    "admin_username": USERNAME,
-                    "admin_password": PASSWORD
-                },
-                "network_profile": {
-                    "network_interfaces": [{
-                        "id": nic_result.id,
-                    }]
-                }
-            }
-        )
-
-        vm_result = poller.result()
-        vm_id=vm_result.id
-
-        print(f"Provisioned virtual machine {vm_result.name}")
-        return [vm_id,"OK"]
-    except:
-        print("Authentication Error Or Resource Creation Error")
-        return ['None',"Authentication Error Or Resource Creation Error"]
 
 
 # Inserting new status in the database
@@ -443,8 +517,8 @@ def insert_db(vm_name,guid,vm_id,state):
     'password':'123@hanu123@HANU',
     'database':'sail_test_db',
     'client_flags': [mysql.connector.ClientFlag.SSL],
-    'ssl_ca': 'C:\\Users\hanuadmin\Downloads\Cer\DigiCertGlobalRootG2.crt.pem'
-    #'/home/sailadmin/sail_plugin/Digi_Certificate/DigiCertAssuredIDRootCA.crt.pem'
+    'ssl_ca': '/home/sailadmin/SCN_Provisioning_Plugin/Sql_Certificate/DigiCertAssuredIDRootCA.crt (1).pem'
+
  
     }
 
@@ -475,6 +549,44 @@ def insert_db(vm_name,guid,vm_id,state):
     conn.close()
     print("Done.")
 
+# Inserting guid and ip in the database
+def insert_db_guid(guid,ip):
+    # Intializing connection parameter to connect to the database
+    config = {
+    'host':'scntest.mysql.database.azure.com',
+    'user':'hanuadmin@scntest',
+    'password':'123@hanu123@HANU',
+    'database':'sail_test_db',
+    'client_flags': [mysql.connector.ClientFlag.SSL],
+    'ssl_ca': '/home/sailadmin/SCN_Provisioning_Plugin/Sql_Certificate/DigiCertAssuredIDRootCA.crt (1).pem'
+
+ 
+    }
+
+    # Construct connection string and intialize database pointer
+
+    try:
+        conn = mysql.connector.connect(**config)
+        print("Connection established")
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("Something is wrong with the user name or password")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("Database does not exist")
+        else:
+            print(err)
+    else:
+        cursor = conn.cursor()
+    # Inserting data into table
+    cursor.execute("INSERT INTO SCN_GUID (guid, ip) VALUES (%s,%s)", (guid,ip))
+    print("Inserted",cursor.rowcount,"row(s) of data.")
+    
+
+    # Cleanup intialized database pointer
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print("Done.")
 
 # Writing the Output Initialization Vectors
 def json_write(vm_id,ROI,DOOI,DCI,DI,TKAC,EAESK,ECB,RORP,DOORP,AORP,SORP,EADEK,IPSAIL):
