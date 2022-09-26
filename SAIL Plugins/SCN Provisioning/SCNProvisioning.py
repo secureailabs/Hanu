@@ -261,11 +261,14 @@ def fetch_vm_status_from_azure(ID,token):
 # Creating SCN Plugin and dependent resources in azure 
 
 def scn_res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
+    with open('Sub_Parameters.json', 'r+') as json_file:
+            variable = json.load(json_file)
+    json_file.close()
         
     credential = ClientSecretCredential(tenant_id,client_id,client_secret)
 
 # Retrieve subscription ID from environment variable.
-    subscription_id = "ba383264-b9d6-4dba-b71f-58b3755382d8"
+    subscription_id = variable["subscription_id"]
 
 
     # 1 - create a resource group
@@ -344,7 +347,7 @@ def scn_res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
 
     # 3.1 - Peering Virtual Networks Plugin VNET to SCN VNET
     peer_vnet_name=vnet_name+"-sail-wus"
-    prd_subscription_id= "ba383264-b9d6-4dba-b71f-58b3755382d8"
+    prd_subscription_id= variable["prd_subscription_id"]
     prd_network_client = NetworkManagementClient(credential, prd_subscription_id)
     prd_resource_client = ResourceManagementClient(credential, prd_subscription_id)
     resource_client.providers.register('Microsoft.Network')
@@ -372,7 +375,7 @@ def scn_res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
 
     # 3.2 - Peering Virtual Networks SAIL Hub and SCN VNET
     peer_vnet_name=vnet_name+"-sail-wus"
-    hub_subscription_id= "6e7f356c-6059-4799-b83a-c4744e4a7c2e"
+    hub_subscription_id= variable["hub_subscription_id"]
     hub_network_client = NetworkManagementClient(credential, hub_subscription_id)
     hub_resource_client = ResourceManagementClient(credential, hub_subscription_id)
     resource_client.providers.register('Microsoft.Network')
@@ -460,8 +463,8 @@ def scn_res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
     compute_client = ComputeManagementClient(credential, subscription_id)
 
     VM_NAME = vm_name+"-sail-wus-"+guid
-    USERNAME = "pythonazureuser"
-    PASSWORD = "ChangeM3N0w!"
+    USERNAME = variable["username"]
+    PASSWORD = variable["password"]
 
     print(f"Provisioning virtual machine {VM_NAME}; this operation might take a few minutes.")
 
@@ -473,7 +476,7 @@ def scn_res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
             "location": LOCATION,
             "storage_profile": {
                 'image_reference': {
-                'id' : '/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/InitializerImageStorage-WUS-Rg/providers/Microsoft.Compute/images/securecomputationnode'
+                'id' : variable["image_id"]
             }
             },
             "hardware_profile": {
