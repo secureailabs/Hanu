@@ -300,23 +300,26 @@ def fetch_vm_status_from_azure(ID,token):
 
 #Creating API Plugin and its dependent resources in azure
 def api_res_creation(vm_size,loc,guid):
-    RESOURCE_GROUP_NAME='RG-SAIL-prd-wus-api-web-01'
+    with open('Sub_Parameters.json', 'r+') as json_file:
+            variable = json.load(json_file)
+    json_file.close()
+    RESOURCE_GROUP_NAME = variable["rg_name"]
     LOCATION = loc
     vm_name = "apivm"
     IP_NAME = "IP01"+"-sail-wus-"+guid
     NIC_NAME = "NIC-"+"API"+"-sail-wus-"+guid
     IP_CONFIG_NAME = "IPCONFIG01"+"-sail-wus-"+guid
-    Subnet_id = "/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/rg-sail-wus-prd-vnet-01/providers/Microsoft.Network/virtualNetworks/vnet-sail-wus-prd-01/subnets/snet-sail-wus-prd-01"
+    Subnet_id = variable["subnet_id"]
     credential = ClientSecretCredential(tenant_id,client_id,client_secret)
 
 # Retrieve subscription ID from environment variable.
-    subscription_id = "ba383264-b9d6-4dba-b71f-58b3755382d8"
+    subscription_id = variable["subscription_id"]
 
     # Get the management object for the network
     network_client = NetworkManagementClient(credential, subscription_id)
     
     # 1 - Create the Public IP address
-    hub_subscription_id= "6e7f356c-6059-4799-b83a-c4744e4a7c2e"
+    hub_subscription_id= variable["hub_subscription_id"]
     hub_network_client = NetworkManagementClient(credential, hub_subscription_id)
     
     poller = hub_network_client.public_ip_addresses.begin_create_or_update("rg-sail-wus-hub-001",
@@ -332,7 +335,7 @@ def api_res_creation(vm_size,loc,guid):
     ip_address_result = poller.result()
     print(f"Provisioned public IP address {ip_address_result.name} with address {ip_address_result.ip_address}")
     
-    api_nsg_id= "/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/RG-SAIL-WUS-PRD-COMMON-RESOURCE/providers/Microsoft.Network/networkSecurityGroups/apiservices-wus-nsg-prd-01"
+    api_nsg_id = variable["api_nsg_id"]
 
     # 2 - Create the network interface client
     poller = network_client.network_interfaces.begin_create_or_update(RESOURCE_GROUP_NAME,
@@ -374,8 +377,8 @@ def api_res_creation(vm_size,loc,guid):
     compute_client = ComputeManagementClient(credential, subscription_id)
 
     VM_NAME = vm_name+"-sail-wus-"+guid
-    USERNAME = "pythonazureuser"
-    PASSWORD = "ChangeM3N0w!"
+    USERNAME = variable["username"]
+    PASSWORD = variable["password"]
 
     print(f"Provisioning virtual machine {VM_NAME}; this operation might take a few minutes.")
 
@@ -384,7 +387,7 @@ def api_res_creation(vm_size,loc,guid):
             "location": LOCATION,
             "storage_profile": {
                 'image_reference': {
-                'id' : '/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/InitializerImageStorage-WUS-Rg/providers/Microsoft.Compute/images/apiservices'
+                'id' : variable['image_id_api']
             }
             },
             "hardware_profile": {
@@ -422,21 +425,24 @@ def api_res_creation(vm_size,loc,guid):
 
 #Creating WEBFRONT Plugin and its dependent resources in azure
 def webft_res_creation(vm_size,loc,guid,pip):
-    RESOURCE_GROUP_NAME='RG-SAIL-prd-wus-api-web-01'
+    with open('Sub_Parameters.json', 'r+') as json_file:
+        variable = json.load(json_file)
+    json_file.close()
+    RESOURCE_GROUP_NAME = variable["rg_name"]
     LOCATION = loc
     vm_name = "webftvm"
     NIC_NAME = "NIC-"+"WEBFT"+"-sail-wus-"+guid
     IP_CONFIG_NAME ="IPCONFIG01"+"-sail-wus-"+guid
-    Subnet_id="/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/rg-sail-wus-prd-vnet-01/providers/Microsoft.Network/virtualNetworks/vnet-sail-wus-prd-01/subnets/snet-sail-wus-prd-01"
+    Subnet_id = variable["subnet_id"]
     credential = ClientSecretCredential(tenant_id,client_id,client_secret)
 
 # Retrieve subscription ID from environment variable.
-    subscription_id = "ba383264-b9d6-4dba-b71f-58b3755382d8"
+    subscription_id = variable["subscription_id"]
 
     # Get the management object for the network
     network_client = NetworkManagementClient(credential, subscription_id)
     
-    webft_nsg_id="/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/RG-SAIL-WUS-PRD-COMMON-RESOURCE/providers/Microsoft.Network/networkSecurityGroups/newwebfrontend-wus-nsg-prd-01"
+    webft_nsg_id = variable["webft_nsg_id"]
 
     # 1 - Create the network interface client
     poller = network_client.network_interfaces.begin_create_or_update(RESOURCE_GROUP_NAME,
@@ -475,8 +481,8 @@ def webft_res_creation(vm_size,loc,guid,pip):
     compute_client = ComputeManagementClient(credential, subscription_id)
 
     VM_NAME = vm_name+"-sail-wus-"+guid
-    USERNAME = "pythonazureuser"
-    PASSWORD = "ChangeM3N0w!"
+    USERNAME = variable["username"]
+    PASSWORD = variable["password"]
 
     print(f"Provisioning virtual machine {VM_NAME}; this operation might take a few minutes.")
 
@@ -486,7 +492,7 @@ def webft_res_creation(vm_size,loc,guid,pip):
             "location": LOCATION,
             "storage_profile": {
                 'image_reference': {
-                'id' : '/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/InitializerImageStorage-WUS-Rg/providers/Microsoft.Compute/images/newwebfrontend'
+                'id' : variable['image_id_webfront']
             }
             },
             "hardware_profile": {
