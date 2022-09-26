@@ -1,0 +1,12 @@
+{
+    "rg_name":"RG-SAIL-prd-wus-api-web-01",
+    "subnet_id":"/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/rg-sail-wus-prd-vnet-01/providers/Microsoft.Network/virtualNetworks/vnet-sail-wus-prd-01/subnets/snet-sail-wus-prd-01",
+    "subscription_id":"ba383264-b9d6-4dba-b71f-58b3755382d8",
+    "hub_subscription_id":"6e7f356c-6059-4799-b83a-c4744e4a7c2e",
+    "api_nsg_id":"/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/RG-SAIL-WUS-PRD-COMMON-RESOURCE/providers/Microsoft.Network/networkSecurityGroups/apiservices-wus-nsg-prd-01",
+    "webft_nsg_id":"/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/RG-SAIL-WUS-PRD-COMMON-RESOURCE/providers/Microsoft.Network/networkSecurityGroups/newwebfrontend-wus-nsg-prd-01",
+    "image_id_api":"/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/InitializerImageStorage-WUS-Rg/providers/Microsoft.Compute/images/apiservices",
+    "image_id_webfront":"/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/InitializerImageStorage-WUS-Rg/providers/Microsoft.Compute/images/newwebfrontend",
+    "username":"pythonazureuser",
+    "password":"ChangeM3N0w!"
+}
