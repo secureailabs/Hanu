@@ -1,5 +1,5 @@
 from distutils.log import error
-import time
+import tim
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
