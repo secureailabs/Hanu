@@ -1,8 +1,0 @@
-{
-    "subscription_id":"ba383264-b9d6-4dba-b71f-58b3755382d8",
-    "prd_subscription_id": "ba383264-b9d6-4dba-b71f-58b3755382d8",
-    "hub_subscription_id":"6e7f356c-6059-4799-b83a-c4744e4a7c2e",
-    "image_id":"/subscriptions/ba383264-b9d6-4dba-b71f-58b3755382d8/resourceGroups/InitializerImageStorage-WUS-Rg/providers/Microsoft.Compute/images/securecomputationnode",
-    "username":"pythonazureuser",
-    "password":"ChangeM3N0w!"
-}
