@@ -261,7 +261,7 @@ def fetch_vm_status_from_azure(ID,token):
 # Creating SCN Plugin and dependent resources in azure 
 
 def scn_res_creation(rg_name,vnet_name,nsg_name,vm_name,vm_size,loc,guid):
-    with open('Sub_Parameters1.json', 'r+') as json_file:
+    with open('Sub_Parameters.json', 'r+') as json_file:
             variable = json.load(json_file)
     json_file.close()
         
