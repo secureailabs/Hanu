@@ -11,7 +11,7 @@
     "Request":{
         "UtcEpochTime":1650401427,
         "VirtualMachineType":"Standard_B1s",
-        "Region":"EastUS"
+        "Region":"WESTUS"
     },
     "InitializationParameters":{
         "ResearchOrganizationIdentifier":"c9e8b975-2793-4e2e-b15f-b03f2ae05192",
