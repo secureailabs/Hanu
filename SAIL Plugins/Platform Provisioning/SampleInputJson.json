@@ -23,7 +23,7 @@
 
         "VirtualMachineType":"Standard_B1s",
 
-        "Region":"EastUS"
+        "Region":"WESTUS"
 
     },
 
